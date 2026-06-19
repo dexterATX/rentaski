@@ -1,0 +1,35 @@
+---
+interface Props {
+  /** Fill color of the wave — match the section it flows into. */
+  color?: string;
+  /** Flip vertically so the crest points down. */
+  flip?: boolean;
+  class?: string;
+}
+const { color = 'var(--ink)', flip = false, class: className } = Astro.props;
+---
+
+<div class:list={['wave-divider', className, { flip }]} aria-hidden="true">
+  <svg viewBox="0 0 1440 120" preserveAspectRatio="none">
+    <path
+      style={`fill:${color}`}
+      d="M0,64 C220,112 430,18 720,46 C1010,74 1230,116 1440,70 L1440,120 L0,120 Z"
+    ></path>
+  </svg>
+</div>
+
+<style>
+  .wave-divider {
+    line-height: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .wave-divider svg {
+    display: block;
+    width: 100%;
+    height: clamp(46px, 7vw, 104px);
+  }
+  .wave-divider.flip svg {
+    transform: scaleY(-1);
+  }
+</style>

@@ -1,0 +1,112 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+import { site } from '../data/site';
+---
+
+<BaseLayout
+  title="Page not found"
+  description="We couldn't find that page. Let's get you back on the water."
+  noindex={true}
+>
+  <section class="result">
+    <div class="container container-narrow">
+      <div class="result-inner">
+        <span class="result-icon" aria-hidden="true">
+          <Icon name="anchor" size="2rem" />
+        </span>
+        <p class="eyebrow center">Error 404</p>
+        <h1>This page drifted out to sea</h1>
+        <p class="lead">
+          We couldn't find the page you were after. It may have been moved, or the link
+          might be off. No worries, the water's still warm. Let's get you back on course.
+        </p>
+
+        <div class="result-actions">
+          <a href="/" class="btn btn-primary btn-lg">
+            <Icon name="arrow-left" size="1.05rem" /> Back to home
+          </a>
+          <a href="/fleet" class="btn btn-ghost btn-lg">Browse the fleet</a>
+        </div>
+
+        <nav class="quick-links" aria-label="Helpful links">
+          <a href="/book"><Icon name="calendar" size="0.95rem" /> Book a ride</a>
+          <a href="/fleet"><Icon name="anchor" size="0.95rem" /> The fleet</a>
+          <a href="/contact"><Icon name="pin" size="0.95rem" /> Contact &amp; FAQ</a>
+        </nav>
+
+        <p class="help">
+          Trying to book and hit a dead end? Call us at
+          <a href={`tel:${site.phoneHref}`}>{site.phone}</a> and we'll sort you out.
+        </p>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .result {
+    padding-top: calc(var(--header-h) + clamp(2.5rem, 7vw, 5rem));
+    padding-bottom: clamp(3.5rem, 8vw, 6rem);
+  }
+  .result-inner {
+    text-align: center;
+  }
+  .result-icon {
+    display: grid;
+    place-items: center;
+    width: 5rem;
+    height: 5rem;
+    margin: 0 auto 1.6rem;
+    border-radius: 50%;
+    background: rgba(94, 234, 212, 0.13);
+    color: var(--teal-bright);
+    box-shadow: 0 0 0 10px rgba(94, 234, 212, 0.06);
+  }
+  .result h1 {
+    margin-top: 0.9rem;
+  }
+  .result .lead {
+    margin-top: 0.9rem;
+    max-width: 48ch;
+    margin-inline: auto;
+  }
+  .result-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.9rem;
+    margin-top: 2.2rem;
+  }
+  .quick-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem 1.6rem;
+    margin-top: 2.4rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--line);
+  }
+  .quick-links a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--text-mute);
+    transition: color var(--t);
+  }
+  .quick-links a:hover {
+    color: var(--teal-bright);
+  }
+  .help {
+    margin-top: 1.8rem;
+    font-size: var(--fs-sm);
+    color: var(--text-mute);
+  }
+  .help a {
+    color: var(--teal-bright);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+</style>

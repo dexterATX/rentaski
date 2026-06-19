@@ -1,0 +1,245 @@
+---
+// Compact, scannable fleet row for the home-page preview — a quick at-a-glance
+// pick rather than a tall card. The whole row is one tap target.
+import type { JetSki } from '../data/jetskis';
+import type { IconName } from '../lib/icons';
+import Icon from './Icon.astro';
+import { usd } from '../lib/format';
+
+interface Props {
+  jetski: JetSki;
+}
+
+const { jetski } = Astro.props;
+
+const specs: { icon: IconName; label: string }[] = [
+  { icon: 'riders', label: `${jetski.capacity}` },
+  { icon: 'gauge', label: `${jetski.topSpeed} mph` },
+  { icon: 'bolt', label: `${jetski.hp} hp` },
+];
+---
+
+<a class="fleet-row" href={`/book?ski=${jetski.id}`}>
+  <div class="fleet-row-photo" style={`--g1:${jetski.gradient[0]};--g2:${jetski.gradient[1]}`}>
+    {
+      jetski.image && (
+        <img
+          src={jetski.image}
+          alt={`${jetski.name} jet ski`}
+          width="320"
+          height="240"
+          loading="lazy"
+          decoding="async"
+          style={jetski.imagePosition ? `object-position:${jetski.imagePosition}` : undefined}
+        />
+      )
+    }
+    <span class="fleet-row-cat">{jetski.category}</span>
+  </div>
+
+  <div class="fleet-row-main">
+    <p class="fleet-row-brand">{jetski.brand} · {jetski.year}</p>
+    <h3 class="fleet-row-name">{jetski.name}</h3>
+    <p class="fleet-row-tag">{jetski.tagline}</p>
+    <ul class="fleet-row-specs" role="list">
+      {
+        specs.map((s) => (
+          <li>
+            <Icon name={s.icon} size="0.9rem" />
+            {s.label}
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+
+  <div class="fleet-row-cta">
+    <p class="fleet-row-price">
+      <span>from</span>
+      <strong>{usd(jetski.rates.hourly)}</strong>
+      <span>/ hr</span>
+    </p>
+    <span class="fleet-row-btn">
+      Book this ski <Icon name="arrow-right" size="1rem" />
+    </span>
+  </div>
+</a>
+
+<style>
+  .fleet-row {
+    display: grid;
+    grid-template-columns: 190px 1fr auto;
+    align-items: center;
+    gap: 1.6rem;
+    padding: 1rem;
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    background: linear-gradient(165deg, var(--surface) 0%, var(--ink-2) 100%);
+    transition: transform var(--t), border-color var(--t), box-shadow var(--t);
+  }
+  .fleet-row:hover {
+    transform: translateY(-3px);
+    border-color: rgba(45, 212, 191, 0.42);
+    box-shadow: var(--shadow);
+  }
+
+  /* photo */
+  .fleet-row-photo {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    border-radius: var(--r);
+    overflow: hidden;
+    background: linear-gradient(150deg, var(--g1), var(--g2));
+  }
+  .fleet-row-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* bias the crop toward the upper part so the rider's face stays in frame */
+    object-position: center 35%;
+    transition: transform var(--t-slow);
+  }
+  .fleet-row:hover .fleet-row-photo img {
+    transform: scale(1.06);
+  }
+  .fleet-row-cat {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    padding: 0.18rem 0.5rem;
+    border-radius: var(--r-full);
+    background: rgba(6, 22, 32, 0.7);
+    backdrop-filter: blur(4px);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: #fff;
+  }
+
+  /* main */
+  .fleet-row-brand {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--teal);
+  }
+  .fleet-row-name {
+    margin-top: 0.15rem;
+    font-size: 1.32rem;
+  }
+  .fleet-row-tag {
+    margin-top: 0.2rem;
+    color: var(--text-dim);
+    font-size: var(--fs-sm);
+  }
+  .fleet-row-specs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.7rem;
+  }
+  .fleet-row-specs li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.32rem;
+    padding: 0.28rem 0.6rem;
+    border-radius: var(--r-xs);
+    background: var(--ink-2);
+    border: 1px solid var(--line);
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    color: var(--text-dim);
+  }
+  .fleet-row-specs :global(svg) {
+    color: var(--teal);
+  }
+
+  /* cta */
+  .fleet-row-cta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.7rem;
+    text-align: right;
+  }
+  .fleet-row-price {
+    display: flex;
+    align-items: baseline;
+    gap: 0.28rem;
+  }
+  .fleet-row-price span {
+    font-size: var(--fs-xs);
+    color: var(--text-mute);
+  }
+  .fleet-row-price strong {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.7rem;
+    color: var(--text);
+  }
+  .fleet-row-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.7rem 1.15rem;
+    border-radius: var(--r-full);
+    background: var(--grad-sun);
+    color: #2a1206;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--fs-sm);
+    white-space: nowrap;
+    transition: box-shadow var(--t), filter var(--t);
+  }
+  .fleet-row:hover .fleet-row-btn {
+    box-shadow: 0 12px 26px -12px rgba(255, 122, 69, 0.7);
+    filter: brightness(1.05);
+  }
+
+  /* ---- tablet ---- */
+  @media (max-width: 760px) {
+    .fleet-row {
+      grid-template-columns: 150px 1fr;
+      gap: 1rem 1.15rem;
+    }
+    .fleet-row-cta {
+      grid-column: 1 / -1;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding-top: 0.9rem;
+      border-top: 1px solid var(--line);
+    }
+  }
+
+  /* ---- phone: photo-led card — full-width photo on top, copy below ---- */
+  @media (max-width: 480px) {
+    .fleet-row {
+      grid-template-columns: 1fr;
+      gap: 0.85rem;
+      padding: 0.8rem;
+    }
+    .fleet-row-photo {
+      aspect-ratio: 16 / 10;
+    }
+    /* the tag reads as clutter on a phone-sized photo */
+    .fleet-row-cat {
+      display: none;
+    }
+    .fleet-row-name {
+      font-size: 1.15rem;
+    }
+    .fleet-row-tag {
+      font-size: var(--fs-xs);
+    }
+    .fleet-row-price strong {
+      font-size: 1.5rem;
+    }
+    .fleet-row-btn {
+      padding: 0.62rem 1rem;
+    }
+  }
+</style>

@@ -1,0 +1,1594 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import FleetRow from '../components/FleetRow.astro';
+import Icon from '../components/Icon.astro';
+import WaveDivider from '../components/WaveDivider.astro';
+import { jetskis } from '../data/jetskis';
+import { included } from '../data/booking';
+import { site, stats, testimonials } from '../data/site';
+import type { IconName } from '../lib/icons';
+
+const featured = jetskis.filter((j) => j.featured);
+
+const features: { icon: IconName; title: string; text: string }[] = [
+  {
+    icon: 'sparkle',
+    title: "The Gulf's newest fleet",
+    text: 'Late-model Sea-Doo and Yamaha skis, obsessively maintained and rotated often. No tired rentals here.',
+  },
+  {
+    icon: 'bolt',
+    title: 'Booked in 60 seconds',
+    text: "Pick your ski, time, and add-ons, pay securely, and you're set. Confirmation lands in your inbox instantly.",
+  },
+  {
+    icon: 'shield',
+    title: 'First-timers welcome',
+    text: 'Never ridden? Our hands-on safety briefing and patient crew get beginners confident before you launch.',
+  },
+  {
+    icon: 'anchor',
+    title: 'We come to you',
+    text: 'No trailer, no ramp, no hauling. We deliver your ski to your dock or beach and drop it in the water. You just walk up and ride.',
+  },
+  {
+    icon: 'map',
+    title: 'Local-guided tours',
+    text: 'Add a captain who knows exactly where the dolphins feed and which sandbars are worth the ride.',
+  },
+  {
+    icon: 'tag',
+    title: 'Honest, all-in pricing',
+    text: 'The price you see is the price you pay. Add-ons are clear up front. No surprises at the dock.',
+  },
+];
+
+const steps: {
+  meta: string;
+  title: string;
+  text: string;
+  image: string;
+  imageAlt: string;
+  imageWidth: number;
+  imageHeight: number;
+  imagePosition?: string;
+}[] = [
+  {
+    meta: 'Takes about a minute',
+    title: 'Book online',
+    text: 'Choose your ski, date, and time. Add a GoPro or a guided dolphin tour. Pay securely. It takes about a minute.',
+    image: '/photos/step-book-online.jpg',
+    imageAlt: 'Hands holding a phone to book a jet ski rental',
+    imageWidth: 128,
+    imageHeight: 128,
+  },
+  {
+    meta: 'We handle the haul',
+    title: 'We deliver & launch',
+    text: 'We meet you at your dock, beach, or ramp and back the ski into the water, fully fuelled. We fit your life jackets and run a quick safety briefing.',
+    image: '/photos/step-deliver-launch.jpg',
+    imageAlt: 'Sea-Doo jet ski being launched from a dock ramp',
+    imageWidth: 128,
+    imageHeight: 128,
+  },
+  {
+    meta: 'Up to a full day out',
+    title: 'Hit the water',
+    text: 'Throttle out into the Gulf. Chase dolphins, beach at a sandbar, or just open it up. We circle back to collect the ski when you’re done.',
+    image: '/photos/step-hit-water.jpg',
+    imageAlt: 'Rider on a Sea-Doo jet ski cruising across the Gulf',
+    imageWidth: 825,
+    imageHeight: 1024,
+    imagePosition: 'center 28%',
+  },
+];
+
+const experiences: {
+  icon: IconName;
+  tag: string;
+  title: string;
+  text: string;
+  gradient: [string, string];
+  image: string;
+  imageAlt: string;
+  imageWidth: number;
+  imageHeight: number;
+}[] = [
+  {
+    icon: 'wave',
+    tag: 'Wildlife',
+    title: 'Dolphin Discovery',
+    text: 'Resident bottlenose dolphins cruise these waters every day. Idle through the pass and watch them play in your wake.',
+    gradient: ['#22d3ee', '#0e7490'],
+    image: '/photos/exp-dolphin-discovery.jpg',
+    imageAlt: 'Bottlenose dolphins swimming in turquoise Gulf waters near Johns Pass',
+    imageWidth: 1024,
+    imageHeight: 576,
+  },
+  {
+    icon: 'anchor',
+    tag: 'Swim stop',
+    title: 'Shell Key Sandbar',
+    text: 'A short, scenic ride to a postcard sandbar. Beach the ski in warm, knee-deep turquoise water and swim.',
+    gradient: ['#5eead4', '#0f766e'],
+    image: '/photos/exp-shell-key-sandbar.jpg',
+    imageAlt: 'Sea-Doo jet ski on the sand at Shell Key sandbar',
+    imageWidth: 1024,
+    imageHeight: 1024,
+  },
+  {
+    icon: 'sun',
+    tag: 'Golden hour',
+    title: 'Gulf Sunset Cruise',
+    text: "Time a late-afternoon rental and ride straight into a Florida sunset. The best photos you'll take all year.",
+    gradient: ['#ffb054', '#f2683a'],
+    image: '/photos/exp-gulf-sunset-cruise.jpg',
+    imageAlt: 'Rider on a Sea-Doo jet ski at sunset on the Gulf',
+    imageWidth: 1024,
+    imageHeight: 1024,
+  },
+];
+
+---
+
+<BaseLayout>
+  {/* ---------- HERO ---------- */}
+  <section class="hero">
+    <img
+      class="hero-bg hero-bg-image"
+      src="/photos/hero-ride.jpg"
+      alt="A rider carving across the open Gulf on a jet ski"
+      width="1920"
+      height="1080"
+      fetchpriority="high"
+      decoding="async"
+    />
+    <video
+      class="hero-bg hero-bg-video"
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="metadata"
+      poster="/photos/hero-ride.jpg"
+      aria-hidden="true"
+    >
+      <source src="/videos/hero-mobile.mp4" type="video/mp4" />
+    </video>
+    <div class="hero-scrim" aria-hidden="true"></div>
+
+    <div class="container hero-inner">
+      <div class="hero-copy">
+        <p class="eyebrow">
+          <Icon name="pin" size="0.95rem" />
+          {site.serviceArea}
+        </p>
+        <h1 class="hero-title">
+          Ride the <span class="text-sun">Gulf Coast</span><br />like you mean it
+        </h1>
+        <p class="lead hero-lead">
+          Premium Sea-Doo jet ski rentals delivered {site.nearby}. Book
+          online in 60 seconds. We bring the ski to you, fuelled and dropped in the
+          water, the same day.
+        </p>
+        <div class="hero-actions">
+          <a href="/book" class="btn btn-primary btn-lg">
+            Book your ride <Icon name="arrow-right" size="1.1rem" />
+          </a>
+          <a href="/fleet" class="btn btn-ghost btn-lg">Explore the fleet</a>
+        </div>
+        <div class="hero-trust">
+          <span class="hero-rating">
+            <span class="stars" aria-hidden="true">★★★★★</span>
+            <strong>{site.rating.value}</strong>
+            <span class="hero-rating-sub">{site.rating.count}+ rider reviews</span>
+          </span>
+          <span class="hero-cancel">
+            <Icon name="check" size="0.9rem" />
+            {site.cancellation}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-statbar">
+      <div class="container">
+        <ul class="hero-stats" role="list">
+          {
+            stats.map((s) => (
+              <li>
+                <span class="hero-stat-value">{s.value}</span>
+                <span class="hero-stat-label">{s.label}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+
+    <WaveDivider color="var(--ink)" class="hero-wave" />
+  </section>
+
+  {/* ---------- WHY US ---------- */}
+  <section class="section">
+    <div class="container">
+      <div class="section-head center reveal">
+        <p class="eyebrow center">Why rentaSkii</p>
+        <h2>Built for the best day on the water</h2>
+        <p class="section-lead">
+          Newer skis, an easy booking flow, and a crew that actually wants your first
+          ride to go well.
+        </p>
+      </div>
+
+      <div class="why-bento">
+        {/* feature 0 — photo feature */}
+        <article class="why-photo reveal">
+          <img
+            src="/photos/fleet-lineup.jpg"
+            alt="A line of rentaSkii Yamaha jet skis moored off the Gulf shore"
+            width="1100"
+            height="620"
+            loading="lazy"
+            decoding="async"
+          />
+          <span class="why-photo-scrim" aria-hidden="true"></span>
+          <div class="why-photo-body">
+            <span class="why-tag">
+              <Icon name="sparkle" size="0.9rem" /> Our fleet
+            </span>
+            <h3>{features[0].title}</h3>
+            <p>{features[0].text}</p>
+            <a href="/fleet" class="link why-photo-link">
+              See the ski <Icon name="arrow-right" size="1rem" />
+            </a>
+          </div>
+        </article>
+
+        {/* features 1–2 — wide cards */}
+        {
+          [1, 2].map((idx, n) => (
+            <article class="why-card why-wide reveal" data-reveal-delay={n + 1}>
+              <span class="why-num" aria-hidden="true">{`0${idx + 1}`}</span>
+              <span class="why-ico"><Icon name={features[idx].icon} size="1.55rem" /></span>
+              <div class="why-text">
+                <h3>{features[idx].title}</h3>
+                <p>{features[idx].text}</p>
+              </div>
+            </article>
+          ))
+        }
+
+        {/* features 3–5 — compact cards */}
+        {
+          [3, 4, 5].map((idx, n) => (
+            <article class="why-card why-sm reveal" data-reveal-delay={n + 1}>
+              <span class="why-num" aria-hidden="true">{`0${idx + 1}`}</span>
+              <span class="why-ico"><Icon name={features[idx].icon} size="1.55rem" /></span>
+              <div class="why-text">
+                <h3>{features[idx].title}</h3>
+                <p>{features[idx].text}</p>
+              </div>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  {/* ---------- FLEET PREVIEW ---------- */}
+  <section class="section section-alt">
+    <div class="container">
+      <div class="section-head fleet-head reveal">
+        <div>
+          <p class="eyebrow">The fleet</p>
+          <h2>Pick your ride</h2>
+          <p class="section-lead">
+            From the stable Sea-Doo GTS to the nimble Spark Trixx — pick the ski
+            that fits your crew and hit the Gulf.
+          </p>
+        </div>
+        <a href="/fleet" class="link fleet-head-link">
+          See details <Icon name="arrow-right" size="1.05rem" />
+        </a>
+      </div>
+      <div class="fleet-list">
+        {featured.map((j, i) => (
+          <div class="reveal" data-reveal-delay={i + 1}>
+            <FleetRow jetski={j} />
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  {/* ---------- HOW IT WORKS ---------- */}
+  <section class="section" id="how">
+    <div class="container">
+      <div class="section-head center reveal">
+        <p class="eyebrow center">How it works</p>
+        <h2>On the water in three easy steps</h2>
+      </div>
+      <ol class="steps" role="list">
+        {
+          steps.map((s, i) => (
+            <li class="step reveal" data-reveal-delay={i + 1}>
+              <span class="step-num" aria-hidden="true">{`0${i + 1}`}</span>
+              <div class="step-top">
+                <span class="step-ico">
+                  <span class="step-ico-inner">
+                    <img
+                      src={s.image}
+                      alt={s.imageAlt}
+                      width={s.imageWidth}
+                      height={s.imageHeight}
+                      style={s.imagePosition ? `object-position:${s.imagePosition}` : undefined}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </span>
+                </span>
+                <span class="step-dot" aria-hidden="true">
+                  Step {i + 1}
+                </span>
+              </div>
+              <span class="step-meta">
+                <Icon name="clock" size="0.78rem" />
+                {s.meta}
+              </span>
+              <h3>{s.title}</h3>
+              <p>{s.text}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  {/* ---------- EXPERIENCES ---------- */}
+  <section class="section section-alt" id="experiences">
+    <div class="container">
+      <div class="section-head center reveal">
+        <p class="eyebrow center">Out on the Gulf</p>
+        <h2>More than a ride</h2>
+        <p class="section-lead">
+          The water around John's Pass is alive. Here's what riders chase most.
+        </p>
+      </div>
+      <div class="exp-grid">
+        {
+          experiences.map((e, i) => (
+            <a
+              href="/book"
+              class="exp-card reveal"
+              data-reveal-delay={i + 1}
+              data-feature={i === 0 ? 'true' : 'false'}
+            >
+              <div
+                class="exp-visual has-photo"
+                style={`--g1:${e.gradient[0]};--g2:${e.gradient[1]}`}
+              >
+                <img
+                  class="exp-photo"
+                  src={e.image}
+                  alt={e.imageAlt}
+                  width={e.imageWidth}
+                  height={e.imageHeight}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <div class="exp-body">
+                <h3>{e.title}</h3>
+                <p>{e.text}</p>
+                <span class="exp-go">
+                  Plan this ride
+                  <Icon name="arrow-right" size="0.95rem" />
+                </span>
+              </div>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  {/* ---------- WHAT'S INCLUDED ---------- */}
+  <section class="section">
+    <div class="container included-grid">
+      <div class="included-copy reveal">
+        <p class="eyebrow">No hidden extras</p>
+        <h2>Every rental includes</h2>
+        <p class="section-lead">
+          The essentials are always covered. Optional add-ons like GoPros, fuel
+          packages, and guided tours are yours to choose at checkout.
+        </p>
+        <a href="/book" class="btn btn-primary btn-lg included-cta">
+          Start your booking <Icon name="arrow-right" size="1.1rem" />
+        </a>
+      </div>
+      <ul class="included-list reveal" data-reveal-delay="1" role="list">
+        {
+          included.map((item) => (
+            <li>
+              <span class="included-check"><Icon name="check" size="1rem" /></span>
+              {item}
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  {/* ---------- REVIEWS ---------- */}
+  <section class="section section-alt" id="reviews">
+    <div class="container">
+      <div class="section-head center reveal">
+        <p class="eyebrow center">Rider stories</p>
+        <h2>600+ five-star days on the water</h2>
+      </div>
+      <div class="review-grid">
+        {
+          testimonials.map((t, i) => (
+            <figure class="review-card reveal" data-reveal-delay={(i % 4) + 1}>
+              <div class="review-stars" aria-label={`${t.rating} out of 5 stars`}>
+                {Array.from({ length: t.rating }).map(() => (
+                  <Icon name="star" size="1rem" />
+                ))}
+              </div>
+              <blockquote>{t.text}</blockquote>
+              <figcaption>
+                <strong>{t.name}</strong>
+                <span>{t.from}</span>
+              </figcaption>
+            </figure>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  {/* ---------- DELIVERY ---------- */}
+  <section class="section">
+    <div class="container location-grid">
+      <div class="location-copy reveal">
+        <p class="eyebrow">We come to you</p>
+        <h2>Your ski, dropped in the water</h2>
+        <p class="section-lead">{site.delivery}</p>
+        <ul class="location-facts" role="list">
+          <li>
+            <span class="location-fact-icon"><Icon name="map" size="1.2rem" /></span>
+            <div>
+              <strong>Free delivery across the Gulf beaches</strong>
+              <span>{site.serviceArea}</span>
+            </div>
+          </li>
+          <li>
+            <span class="location-fact-icon"><Icon name="clock" size="1.2rem" /></span>
+            <div>
+              <strong>Daily delivery windows</strong>
+              <span>{site.hours[0].time} weekdays · {site.hours[1].time} weekends</span>
+            </div>
+          </li>
+        </ul>
+        <a href="/book" class="btn btn-ghost">
+          <Icon name="calendar" size="1.05rem" /> Schedule your drop-off
+        </a>
+      </div>
+      <div class="location-map reveal" data-reveal-delay="1">
+        <iframe
+          class="map-embed"
+          title="rentaSkii delivery area — centered on Clearwater Beach, FL"
+          src="https://maps.google.com/maps?width=100%25&height=100%25&hl=en&q=Clearwater%20Beach%2C%20FL&t=&z=12&ie=UTF8&iwloc=B&output=embed"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          allowfullscreen></iframe>
+        <span class="map-label">
+          <Icon name="pin" size="0.95rem" /> Free delivery to every main beach
+        </span>
+      </div>
+    </div>
+  </section>
+
+  {/* ---------- FINAL CTA ---------- */}
+  <section class="section-tight">
+    <div class="container">
+      <div class="cta-band reveal">
+        <img
+          class="cta-bg"
+          src="/photos/gulf-wide.jpg"
+          alt=""
+          width="1800"
+          height="1200"
+          loading="lazy"
+          decoding="async"
+        />
+        <span class="cta-scrim" aria-hidden="true"></span>
+        <span class="cta-glow" aria-hidden="true"></span>
+        <div class="cta-content">
+          <p class="eyebrow">Your ski is fueled and waiting</p>
+          <h2>Ready to ride the Gulf?</h2>
+          <p class="lead">
+            Same-day bookings welcome. {site.cancellation}
+          </p>
+        </div>
+        <div class="cta-actions">
+          <a href="/book" class="btn btn-primary btn-lg">
+            Book your ride <Icon name="arrow-right" size="1.1rem" />
+          </a>
+          <a href={`tel:${site.phoneHref}`} class="btn btn-ghost btn-lg">
+            <Icon name="phone" size="1.05rem" /> {site.phone}
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+  <script>
+    const heroVideo = document.querySelector<HTMLVideoElement>('.hero-bg-video');
+    if (heroVideo) {
+      const tryPlay = () => {
+        if (window.matchMedia('(max-width: 768px)').matches) {
+          heroVideo.play().catch(() => {});
+        }
+      };
+      tryPlay();
+      window.matchMedia('(max-width: 768px)').addEventListener('change', tryPlay);
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) tryPlay();
+      });
+    }
+  </script>
+</BaseLayout>
+
+<style>
+  /* ---------- hero ---------- */
+  .hero {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: clamp(600px, 94vh, 940px);
+    overflow: hidden;
+    isolation: isolate;
+    background: var(--ink);
+  }
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 54% 40%;
+    z-index: -2;
+    animation: hero-drift 26s ease-in-out infinite alternate;
+  }
+  .hero-bg-video {
+    display: none;
+    animation: none;
+    transform: none;
+    object-position: center center;
+  }
+  @keyframes hero-drift {
+    from { transform: scale(1.06) translateX(0); }
+    to { transform: scale(1.13) translateX(-1.5%); }
+  }
+  .hero-scrim {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(ellipse 46% 40% at 82% 16%, rgba(255, 138, 76, 0.3), transparent 62%),
+      linear-gradient(
+        100deg,
+        rgba(4, 16, 24, 0.95) 0%,
+        rgba(4, 16, 24, 0.82) 30%,
+        rgba(4, 16, 24, 0.4) 60%,
+        rgba(4, 16, 24, 0.62) 100%
+      ),
+      linear-gradient(to top, var(--ink) 1%, rgba(6, 22, 32, 0) 32%);
+  }
+  .hero-inner {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding-top: calc(var(--header-h) + clamp(1.75rem, 5vw, 3.5rem));
+    padding-bottom: clamp(1.75rem, 4vw, 3rem);
+  }
+  .hero-copy {
+    max-width: 660px;
+  }
+  .hero-title {
+    margin-top: 1.3rem;
+    font-size: clamp(2.85rem, 1.9rem + 4.4vw, 4.7rem);
+    font-weight: 700;
+    line-height: 1.01;
+    text-shadow: 0 2px 30px rgba(0, 0, 0, 0.45);
+  }
+  .hero-lead {
+    margin-top: 1.45rem;
+    max-width: 46ch;
+    color: #cbdbe3;
+  }
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+    margin-top: 2rem;
+  }
+  .hero :global(.btn-ghost) {
+    background: rgba(6, 22, 32, 0.55);
+    border-color: rgba(222, 241, 252, 0.3);
+    backdrop-filter: blur(6px);
+  }
+  .hero :global(.btn-ghost:hover) {
+    border-color: var(--teal);
+    background: rgba(45, 212, 191, 0.18);
+  }
+  .hero-trust {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.55rem 1.15rem;
+    margin-top: 1.75rem;
+    font-size: var(--fs-sm);
+  }
+  .hero-rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+  }
+  .stars {
+    color: var(--gold);
+    letter-spacing: 0.08em;
+    font-size: 1rem;
+  }
+  .hero-rating strong {
+    color: var(--text);
+    font-size: 1rem;
+  }
+  .hero-rating-sub {
+    color: var(--text-dim);
+  }
+  .hero-cancel {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.42rem;
+    color: var(--text-dim);
+  }
+  .hero-cancel :global(svg) {
+    flex-shrink: 0;
+    color: var(--teal-bright);
+  }
+
+  /* hero stat bar */
+  .hero-statbar {
+    position: relative;
+    padding-block: clamp(1.3rem, 3vw, 2rem);
+    padding-bottom: clamp(2.75rem, 5vw, 4rem);
+    border-top: 1px solid rgba(222, 241, 252, 0.15);
+    background: linear-gradient(
+      to top,
+      rgba(5, 18, 26, 0.95) 30%,
+      rgba(5, 18, 26, 0.45)
+    );
+    backdrop-filter: blur(3px);
+  }
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem 1.5rem;
+  }
+  .hero-stats li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding-left: 1.1rem;
+    border-left: 2px solid rgba(45, 212, 191, 0.4);
+  }
+  .hero-stat-value {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(1.5rem, 1rem + 1.8vw, 2.3rem);
+    color: var(--teal-bright);
+  }
+  .hero-stat-label {
+    font-size: var(--fs-sm);
+    color: var(--text-dim);
+  }
+  .hero-wave {
+    margin-top: -1px;
+  }
+
+  @media (max-width: 768px) {
+    .hero-bg-image {
+      display: none;
+    }
+    .hero-bg-video {
+      display: block;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-bg-image {
+      display: block !important;
+    }
+    .hero-bg-video {
+      display: none !important;
+    }
+    .hero-bg {
+      animation: none;
+      transform: scale(1.06);
+    }
+  }
+
+  /* ---------- why-us bento ---------- */
+  .why-bento {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 1.1rem;
+  }
+
+  /* shared card chrome */
+  .why-card {
+    position: relative;
+    overflow: hidden;
+    padding: 1.7rem;
+    border-radius: var(--r-lg);
+    border: 1px solid var(--line);
+    background:
+      radial-gradient(circle 150px at 100% 0%, rgba(45, 212, 191, 0.12), transparent 72%),
+      linear-gradient(165deg, var(--surface) 0%, var(--ink-2) 100%);
+    transition: transform var(--t), border-color var(--t), box-shadow var(--t);
+  }
+  .why-card::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 2px;
+    background: var(--grad-teal);
+    opacity: 0;
+    transition: opacity var(--t);
+  }
+  .why-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(45, 212, 191, 0.42);
+    box-shadow: var(--shadow);
+  }
+  .why-card:hover::before {
+    opacity: 1;
+  }
+  .why-num {
+    position: absolute;
+    top: 0.5rem;
+    right: 1.15rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 2.7rem;
+    line-height: 1;
+    color: rgba(94, 234, 212, 0.09);
+    pointer-events: none;
+  }
+  .why-ico {
+    display: grid;
+    place-items: center;
+    width: 3.25rem;
+    height: 3.25rem;
+    flex-shrink: 0;
+    border-radius: var(--r-sm);
+    background: linear-gradient(150deg, rgba(45, 212, 191, 0.26), rgba(45, 212, 191, 0.05));
+    border: 1px solid rgba(45, 212, 191, 0.28);
+    color: var(--teal-bright);
+  }
+  .why-card h3 {
+    font-size: 1.22rem;
+  }
+  .why-card p {
+    margin-top: 0.45rem;
+    color: var(--text-dim);
+    font-size: var(--fs-sm);
+  }
+
+  /* wide cards (features 2–3) — horizontal */
+  .why-wide {
+    grid-column: span 3;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+  }
+
+  /* compact cards (features 4–6) — vertical */
+  .why-sm {
+    grid-column: span 2;
+  }
+  .why-sm .why-ico {
+    margin-bottom: 1.1rem;
+  }
+
+  /* photo feature card */
+  .why-photo {
+    position: relative;
+    grid-column: span 3;
+    grid-row: span 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-height: 340px;
+    padding: 1.8rem;
+    border-radius: var(--r-lg);
+    border: 1px solid var(--line);
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .why-photo img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -2;
+    transition: transform var(--t-slow);
+  }
+  .why-photo:hover img {
+    transform: scale(1.055);
+  }
+  .why-photo-scrim {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(
+      to top,
+      rgba(4, 16, 24, 0.96) 14%,
+      rgba(4, 16, 24, 0.55) 52%,
+      rgba(4, 16, 24, 0.12) 100%
+    );
+  }
+  .why-photo-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .why-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    align-self: flex-start;
+    margin-bottom: 0.35rem;
+    padding: 0.34rem 0.72rem;
+    border-radius: var(--r-full);
+    background: rgba(255, 138, 76, 0.16);
+    border: 1px solid rgba(255, 138, 76, 0.32);
+    color: var(--sun-bright);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .why-photo h3 {
+    font-size: 1.65rem;
+  }
+  .why-photo p {
+    color: #cbdbe3;
+    font-size: var(--fs-sm);
+  }
+  .why-photo-link {
+    margin-top: 0.5rem;
+  }
+
+  @media (max-width: 940px) {
+    .why-bento {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .why-photo {
+      grid-column: 1 / -1;
+      grid-row: auto;
+      min-height: 280px;
+    }
+    .why-wide {
+      grid-column: 1 / -1;
+    }
+    .why-sm {
+      grid-column: span 1;
+    }
+    .why-sm:last-child {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .why-bento {
+      grid-template-columns: 1fr;
+    }
+    .why-sm,
+    .why-sm:last-child {
+      grid-column: 1 / -1;
+    }
+  }
+
+  /* ---------- fleet preview ---------- */
+  .fleet-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    max-width: none;
+  }
+  .fleet-head-link {
+    flex-shrink: 0;
+    padding-bottom: 0.4rem;
+  }
+  .fleet-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    align-items: stretch;
+  }
+  .fleet-list :global(.fleet-row) {
+    width: 100%;
+    height: 100%;
+  }
+  @media (max-width: 960px) {
+    .fleet-list {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* ---------- steps ---------- */
+  .steps {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.75rem;
+  }
+  /* dashed progress rail linking the three steps (desktop only) */
+  .steps::before {
+    content: '';
+    position: absolute;
+    top: 4.4rem;
+    left: 9%;
+    right: 9%;
+    height: 2px;
+    background: repeating-linear-gradient(
+      90deg,
+      rgba(45, 212, 191, 0.55) 0 7px,
+      transparent 7px 15px
+    );
+    z-index: 0;
+  }
+  .step {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 2rem 1.7rem 1.9rem;
+    background: linear-gradient(180deg, var(--surface) 0%, var(--ink-2) 100%);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    transition: transform var(--t), border-color var(--t), box-shadow var(--t);
+  }
+  .step:hover {
+    transform: translateY(-5px);
+    border-color: rgba(45, 212, 191, 0.42);
+    box-shadow: var(--shadow);
+  }
+  /* accent bar that wipes in on hover */
+  .step::after {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: var(--grad-teal);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--t);
+  }
+  .step:hover::after {
+    transform: scaleX(1);
+  }
+  /* oversized watermark numeral */
+  .step-num {
+    position: absolute;
+    top: -0.5rem;
+    right: 0.7rem;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 5.5rem;
+    line-height: 1;
+    color: var(--text);
+    opacity: 0.06;
+    pointer-events: none;
+  }
+  .step-top {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+  .step-ico {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 4.75rem;
+    height: 4.75rem;
+    padding: 4px;
+    border-radius: 50%;
+    background: rgba(45, 212, 191, 0.1);
+    border: 1px solid rgba(94, 234, 212, 0.24);
+    box-shadow:
+      0 0 0 4px rgba(45, 212, 191, 0.06),
+      0 12px 28px rgba(4, 16, 24, 0.38);
+    transition:
+      transform var(--t),
+      box-shadow var(--t),
+      border-color var(--t);
+  }
+  .step-ico-inner {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--ink);
+  }
+  .step:hover .step-ico {
+    transform: translateY(-2px) scale(1.03);
+    border-color: rgba(94, 234, 212, 0.42);
+    box-shadow:
+      0 0 0 5px rgba(45, 212, 191, 0.12),
+      0 16px 34px rgba(4, 16, 24, 0.45);
+  }
+  .step-ico img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    object-position: center;
+    background: var(--ink);
+  }
+  .step-dot {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--teal);
+  }
+  .step-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.38rem;
+    align-self: flex-start;
+    margin-top: 1.25rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: var(--r-full);
+    background: rgba(45, 212, 191, 0.1);
+    border: 1px solid rgba(45, 212, 191, 0.22);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: var(--teal-bright);
+  }
+  .step-meta :global(svg) {
+    flex-shrink: 0;
+  }
+  .step h3 {
+    margin-top: 0.7rem;
+    font-size: 1.3rem;
+  }
+  .step p {
+    margin-top: 0.5rem;
+    color: var(--text-dim);
+    font-size: var(--fs-sm);
+  }
+
+  /* ---------- experiences ---------- */
+  .exp-grid {
+    display: grid;
+    grid-template-columns: 1.08fr 1fr;
+    gap: 1.4rem;
+  }
+  .exp-card {
+    display: grid;
+    grid-template-columns: 236px 1fr;
+    align-items: stretch;
+    background: linear-gradient(180deg, var(--surface) 0%, var(--ink-2) 100%);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    color: inherit;
+    text-decoration: none;
+    transition: transform var(--t), border-color var(--t), box-shadow var(--t);
+  }
+  .exp-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(45, 212, 191, 0.42);
+    box-shadow: var(--shadow);
+  }
+  /* feature card — tall, stacked, spans both rows on the left */
+  .exp-card[data-feature='true'] {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  /* layered illustrated scene */
+  .exp-visual {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(150deg, var(--g1), var(--g2));
+    flex-shrink: 0;
+  }
+  .exp-visual.has-photo {
+    background: var(--ink);
+  }
+  .exp-card:not([data-feature='true']) .exp-visual {
+    width: 236px;
+    min-height: 100%;
+    display: flex;
+    align-items: stretch;
+  }
+  .exp-card[data-feature='true'] .exp-visual {
+    width: 100%;
+  }
+  .exp-photo {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    object-position: center;
+    transition: transform var(--t-slow);
+  }
+  .exp-card:not([data-feature='true']) .exp-photo {
+    flex: 1;
+    height: 100%;
+    min-height: 100%;
+    object-fit: cover;
+    object-position: center 42%;
+  }
+  .exp-card[data-feature='true'] .exp-photo {
+    width: 100%;
+    height: auto;
+  }
+  .exp-card:hover .exp-photo {
+    transform: scale(1.02);
+  }
+  .exp-glow {
+    position: absolute;
+    top: -28%;
+    right: -14%;
+    width: 62%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle,
+      rgba(255, 255, 255, 0.55) 0%,
+      rgba(255, 255, 255, 0) 68%
+    );
+  }
+  .exp-waves {
+    position: absolute;
+    inset: auto 0 -1px 0;
+    width: 100%;
+    height: 62%;
+    fill: rgba(255, 255, 255, 0.12);
+  }
+  .exp-waves path:nth-child(2) {
+    fill: rgba(255, 255, 255, 0.16);
+  }
+  .exp-waves path:nth-child(3) {
+    fill: rgba(4, 22, 30, 0.34);
+  }
+  .exp-spray {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.7);
+  }
+  .exp-spray.s1 {
+    width: 7px;
+    height: 7px;
+    top: 30%;
+    left: 22%;
+  }
+  .exp-spray.s2 {
+    width: 4px;
+    height: 4px;
+    top: 46%;
+    left: 38%;
+    background: rgba(255, 255, 255, 0.5);
+  }
+  .exp-spray.s3 {
+    width: 5px;
+    height: 5px;
+    top: 22%;
+    left: 54%;
+    background: rgba(255, 255, 255, 0.55);
+  }
+  .exp-ico {
+    position: absolute;
+    bottom: 0.95rem;
+    left: 0.95rem;
+    display: grid;
+    place-items: center;
+    width: 3.1rem;
+    height: 3.1rem;
+    border-radius: var(--r-md);
+    background: rgba(6, 22, 32, 0.55);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    color: #fff;
+    transition: transform var(--t);
+  }
+  .exp-card:hover .exp-ico {
+    transform: translateY(-3px) scale(1.05);
+  }
+  .exp-tag {
+    position: absolute;
+    top: 0.85rem;
+    left: 0.85rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: var(--r-full);
+    background: rgba(6, 22, 32, 0.62);
+    backdrop-filter: blur(5px);
+    color: #fff;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+
+  .exp-body {
+    display: flex;
+    flex-direction: column;
+    padding: 1.4rem 1.5rem;
+  }
+  .exp-card[data-feature='true'] .exp-body {
+    padding: 1.7rem;
+  }
+  .exp-body h3 {
+    font-size: 1.25rem;
+  }
+  .exp-card[data-feature='true'] .exp-body h3 {
+    font-size: 1.55rem;
+  }
+  .exp-body p {
+    margin-top: 0.5rem;
+    color: var(--text-dim);
+    font-size: var(--fs-sm);
+  }
+  .exp-go {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 1rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--line);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--teal);
+  }
+  .exp-go :global(svg) {
+    transition: transform var(--t);
+  }
+  .exp-card:hover .exp-go :global(svg) {
+    transform: translateX(4px);
+  }
+
+  /* ---------- included ---------- */
+  .included-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(2rem, 5vw, 4rem);
+    align-items: center;
+  }
+  .included-cta {
+    margin-top: 1.8rem;
+  }
+  .included-list {
+    display: grid;
+    gap: 0.85rem;
+    padding: 1.8rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+  }
+  .included-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+    font-size: var(--fs-sm);
+    color: var(--text-dim);
+  }
+  .included-check {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 1.7rem;
+    height: 1.7rem;
+    border-radius: 50%;
+    background: rgba(52, 211, 153, 0.16);
+    color: var(--success);
+  }
+
+  /* ---------- reviews ---------- */
+  .review-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+  }
+  .review-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    padding: 1.6rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+  }
+  .review-stars {
+    display: flex;
+    gap: 0.15rem;
+    color: var(--gold);
+  }
+  .review-card blockquote {
+    font-size: var(--fs-sm);
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+  .review-card figcaption {
+    display: flex;
+    flex-direction: column;
+    margin-top: auto;
+    padding-top: 0.4rem;
+  }
+  .review-card figcaption strong {
+    font-family: var(--font-display);
+  }
+  .review-card figcaption span {
+    font-size: var(--fs-xs);
+    color: var(--text-mute);
+  }
+
+  /* ---------- location ---------- */
+  .location-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(2rem, 5vw, 3.5rem);
+    align-items: center;
+  }
+  .location-facts {
+    display: grid;
+    gap: 1rem;
+    margin: 1.8rem 0;
+  }
+  .location-facts li {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+  }
+  .location-fact-icon {
+    display: grid;
+    place-items: center;
+    width: 2.7rem;
+    height: 2.7rem;
+    border-radius: var(--r-sm);
+    background: rgba(45, 212, 191, 0.12);
+    color: var(--teal-bright);
+    flex-shrink: 0;
+  }
+  .location-facts strong {
+    display: block;
+    font-family: var(--font-display);
+  }
+  .location-facts span {
+    font-size: var(--fs-sm);
+    color: var(--text-dim);
+  }
+  .location-map {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    border: 1px solid var(--line-2);
+    background: #07212f;
+    box-shadow: var(--shadow);
+  }
+  .map-embed {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+    filter: saturate(1.05);
+  }
+  .map-label {
+    position: absolute;
+    left: 1rem;
+    bottom: 1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.9rem;
+    background: rgba(6, 22, 32, 0.86);
+    backdrop-filter: blur(6px);
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-full);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: var(--text);
+    box-shadow: var(--shadow-sm);
+    pointer-events: none;
+  }
+  .map-label :global(svg) {
+    color: var(--teal-bright);
+    flex-shrink: 0;
+  }
+
+  /* ---------- final CTA ---------- */
+  .cta-band {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    padding: clamp(2.5rem, 5vw, 4rem);
+    border-radius: var(--r-xl);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: var(--ink-2);
+    box-shadow: var(--shadow);
+  }
+  .cta-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 60%;
+    z-index: -2;
+  }
+  .cta-scrim {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(ellipse 50% 82% at 86% 18%, rgba(255, 138, 76, 0.32), transparent 60%),
+      linear-gradient(112deg, rgba(4, 16, 24, 0.93) 34%, rgba(4, 16, 24, 0.5) 100%);
+  }
+  .cta-glow {
+    position: absolute;
+    top: -40%;
+    right: -8%;
+    width: 40%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(45, 212, 191, 0.22), transparent 70%);
+    pointer-events: none;
+    z-index: -1;
+  }
+  .cta-content {
+    position: relative;
+  }
+  .cta-content h2 {
+    margin-top: 0.7rem;
+  }
+  .cta-content .lead {
+    margin-top: 0.7rem;
+  }
+  .cta-actions {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+  }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 940px) {
+    .steps {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    /* rail only makes sense across a single row of 3 */
+    .steps::before {
+      display: none;
+    }
+    /* experiences collapse to one column of vertical cards */
+    .exp-grid {
+      grid-template-columns: 1fr;
+    }
+    .exp-card,
+    .exp-card[data-feature='true'] {
+      grid-column: 1;
+      grid-row: auto;
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto;
+    }
+    .exp-card:not([data-feature='true']) .exp-visual {
+      width: 100%;
+      min-height: 0;
+      display: block;
+    }
+    .exp-card:not([data-feature='true']) .exp-photo {
+      height: auto;
+      min-height: 0;
+      object-fit: contain;
+    }
+    .exp-card[data-feature='true'] .exp-photo {
+      max-height: none;
+    }
+    .review-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .included-grid,
+    .location-grid {
+      grid-template-columns: 1fr;
+    }
+    .fleet-head {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .steps,
+    .review-grid {
+      grid-template-columns: 1fr;
+    }
+    .hero-stats {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.4rem 1rem;
+    }
+    .hero-bg-image {
+      object-position: 50% 38%;
+    }
+    .hero-bg-video {
+      object-position: center 42%;
+    }
+    .hero-title {
+      line-height: 1.05;
+    }
+    .cta-band {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    /* On phones the copy spans the full width, so a horizontal scrim leaves the
+       lower text sitting over the bright ski. Switch to a top-and-bottom
+       vertical scrim that keeps the eyebrow/title/lead and the stat bar dark
+       while still letting the photo breathe through the middle. */
+    .hero-scrim {
+      background:
+        radial-gradient(ellipse 90% 44% at 72% 8%, rgba(255, 138, 76, 0.24), transparent 60%),
+        linear-gradient(
+          180deg,
+          rgba(4, 16, 24, 0.96) 0%,
+          rgba(4, 16, 24, 0.9) 38%,
+          rgba(4, 16, 24, 0.66) 56%,
+          rgba(4, 16, 24, 0.82) 84%,
+          var(--ink) 100%
+        );
+    }
+    /* tighten the hero rhythm so it reads as one confident screen, not a long scroll */
+    .hero {
+      min-height: clamp(480px, 78svh, 680px);
+    }
+    /* pull the copy up toward the header instead of dead-centering it */
+    .hero-inner {
+      align-items: flex-start;
+      padding-top: calc(var(--header-h) + 1rem);
+    }
+    .hero-lead {
+      color: #d7e4ea;
+      max-width: 38ch;
+    }
+    .hero-actions :global(.btn) {
+      flex: 1 1 auto;
+    }
+  }
+
+  @media (max-width: 380px) {
+    /* never let the two hero CTAs get squeezed side by side on tiny phones */
+    .hero-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+</style>

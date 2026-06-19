@@ -1,0 +1,85 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Icon from '../../components/Icon.astro';
+import { site } from '../../data/site';
+---
+
+<BaseLayout
+  title="Checkout cancelled"
+  description="Your jet ski checkout was cancelled. No charge was made."
+  noindex={true}
+>
+  <section class="result">
+    <div class="container container-narrow">
+      <div class="result-inner">
+        <span class="result-icon" aria-hidden="true">
+          <Icon name="arrow-left" size="2rem" />
+        </span>
+        <p class="eyebrow center">Checkout cancelled</p>
+        <h1>No worries, nothing was charged</h1>
+        <p class="lead">
+          You backed out before payment, so your card was never touched. Your jet ski is
+          still available. Pick up right where you left off whenever you're ready.
+        </p>
+
+        <div class="result-actions">
+          <a href="/book" class="btn btn-primary btn-lg">
+            <Icon name="calendar" size="1.05rem" /> Return to booking
+          </a>
+          <a href="/fleet" class="btn btn-ghost btn-lg">Browse the fleet</a>
+        </div>
+
+        <p class="help">
+          Hit a snag at checkout? Call us at
+          <a href={`tel:${site.phoneHref}`}>{site.phone}</a> and we'll book you in by phone.
+        </p>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .result {
+    padding-top: calc(var(--header-h) + clamp(2.5rem, 7vw, 5rem));
+    padding-bottom: clamp(3.5rem, 8vw, 6rem);
+  }
+  .result-inner {
+    text-align: center;
+  }
+  .result-icon {
+    display: grid;
+    place-items: center;
+    width: 5rem;
+    height: 5rem;
+    margin: 0 auto 1.6rem;
+    border-radius: 50%;
+    background: rgba(255, 194, 75, 0.14);
+    color: var(--gold);
+    box-shadow: 0 0 0 10px rgba(255, 194, 75, 0.06);
+  }
+  .result h1 {
+    margin-top: 0.9rem;
+  }
+  .result .lead {
+    margin-top: 0.9rem;
+    max-width: 48ch;
+    margin-inline: auto;
+  }
+  .result-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.9rem;
+    margin-top: 2.2rem;
+  }
+  .help {
+    margin-top: 1.8rem;
+    font-size: var(--fs-sm);
+    color: var(--text-mute);
+  }
+  .help a {
+    color: var(--teal-bright);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+</style>

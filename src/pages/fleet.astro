@@ -1,0 +1,593 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import FleetCard from '../components/FleetCard.astro';
+import Icon from '../components/Icon.astro';
+import { jetskis } from '../data/jetskis';
+import { included } from '../data/booking';
+import { site } from '../data/site';
+import { usd } from '../lib/format';
+
+const categoryOrder = ['Recreation', 'Cruiser', 'Sport', 'Luxury', 'Performance'];
+const categories = categoryOrder
+  .map((name) => ({ name, count: jetskis.filter((j) => j.category === name).length }))
+  .filter((c) => c.count > 0);
+
+const sortOptions = [
+  { value: 'featured', label: 'Featured' },
+  { value: 'price-asc', label: 'Price low to high' },
+  { value: 'price-desc', label: 'Price high to low' },
+  { value: 'speed', label: 'Fastest first' },
+  { value: 'power', label: 'Most powerful' },
+];
+---
+
+<BaseLayout
+  title="The Fleet"
+  description="Rent Sea-Doo jet skis across the Florida Gulf Coast — recreation and sport models. Check the specs and book your ride."
+>
+  <PageHeader
+    eyebrow="Our fleet"
+    title="Pick your ski"
+    lead="Late-model Sea-Doo skis, cleaned and safety-checked before every ride. Compare specs and book your time on the water."
+  />
+
+  {/* ---------- BROWSE ---------- */}
+  <section class="section fleet-section">
+    <div class="container">
+      <div class="fleet-toolbar">
+        <div class="ft-filters" role="group" aria-label="Filter skis by class">
+          <button type="button" class="ft-chip is-active" data-filter="all" aria-pressed="true">
+            All <span class="ft-n">{jetskis.length}</span>
+          </button>
+          {
+            categories.map((c) => (
+              <button type="button" class="ft-chip" data-filter={c.name} aria-pressed="false">
+                {c.name} <span class="ft-n">{c.count}</span>
+              </button>
+            ))
+          }
+        </div>
+        <div class="ft-end">
+          <p class="ft-count" data-fleet-count aria-live="polite">
+            {jetskis.length} {jetskis.length === 1 ? 'ski' : 'skis'}
+          </p>
+          <label class="ft-sort">
+            <span class="ft-sort-label">Sort</span>
+            <select data-fleet-sort>
+              {sortOptions.map((o) => <option value={o.value}>{o.label}</option>)}
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div class="fleet-grid" data-fleet-grid>
+        {jetskis.map((j, i) => <FleetCard jetski={j} index={i} />)}
+      </div>
+
+      <p class="fleet-empty" data-fleet-empty hidden>
+        No skis in that class right now. Try another filter.
+      </p>
+
+      <div class="fleet-help reveal">
+        <span class="fleet-help-icon"><Icon name="phone" size="1.15rem" /></span>
+        <p>
+          Still deciding? The <strong>Spark Trixx</strong> is the easy pick for
+          first-timers; the <strong>RXP-X 325</strong> is built for experienced
+          thrill-seekers. Call <a href={`tel:${site.phoneHref}`} class="link">{site.phone}</a>
+          and we'll match you to the right ride.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  {/* ---------- COMPARE ---------- */}
+  <section class="section section-alt">
+    <div class="container">
+      <div class="section-head center reveal">
+        <p class="eyebrow center">Side by side</p>
+        <h2>Compare the full fleet</h2>
+        <p class="section-lead">Every ski, every spec, in one quick glance.</p>
+      </div>
+      <div class="compare-scroll reveal">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th scope="col">Jet ski</th>
+              <th scope="col">Class</th>
+              <th scope="col">Seats</th>
+              <th scope="col">Top speed</th>
+              <th scope="col">Power</th>
+              <th scope="col">From / hr</th>
+              <th scope="col"><span class="sr-only">Book</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              jetskis.map((j) => (
+                <tr>
+                  <th scope="row">
+                    <span class="ct-name">{j.name}</span>
+                    <span class="ct-brand">{j.brand} · {j.year}</span>
+                  </th>
+                  <td data-label="Class">{j.category}</td>
+                  <td data-label="Seats">{j.capacity}</td>
+                  <td data-label="Top speed">{j.topSpeed} mph</td>
+                  <td data-label="Power">{j.hp} hp</td>
+                  <td class="ct-price" data-label="From / hr">{usd(j.rates.hourly)}</td>
+                  <td class="ct-book-cell">
+                    <a href={`/book?ski=${j.id}`} class="link ct-book">
+                      Book <Icon name="arrow-right" size="0.95rem" />
+                    </a>
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  {/* ---------- INCLUDED ---------- */}
+  <section class="section">
+    <div class="container">
+      <div class="included-band reveal">
+        <div class="included-band-head">
+          <p class="eyebrow">Always included</p>
+          <h2>What comes with every rental</h2>
+          <p class="section-lead">
+            No hidden fees. Optional add-ons like GoPros, fuel packages, and guided
+            tours are yours to choose at checkout.
+          </p>
+        </div>
+        <ul class="included-band-list" role="list">
+          {
+            included.map((item) => (
+              <li>
+                <span class="included-check"><Icon name="check" size="1rem" /></span>
+                {item}
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  {/* ---------- CTA ---------- */}
+  <section class="section-tight">
+    <div class="container">
+      <div class="fleet-cta reveal">
+        <div>
+          <h2>Found your ride?</h2>
+          <p class="lead">Lock in your time slot. Same-day bookings welcome.</p>
+        </div>
+        <a href="/book" class="btn btn-primary btn-lg">
+          Book your ride <Icon name="arrow-right" size="1.1rem" />
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  // Client-side filter + sort — progressive enhancement. Without JS, all skis
+  // skis show in fleet order and the toolbar stays hidden.
+  const grid = document.querySelector<HTMLElement>('[data-fleet-grid]');
+
+  if (grid) {
+    const cards = Array.from(grid.querySelectorAll<HTMLElement>('[data-fleet-card]'));
+    const chips = Array.from(document.querySelectorAll<HTMLButtonElement>('.ft-chip'));
+    const sortSel = document.querySelector<HTMLSelectElement>('[data-fleet-sort]');
+    const countEl = document.querySelector<HTMLElement>('[data-fleet-count]');
+    const emptyEl = document.querySelector<HTMLElement>('[data-fleet-empty]');
+    let activeFilter = 'all';
+
+    const n = (el: HTMLElement, key: string) => Number(el.dataset[key] ?? 0);
+
+    function render() {
+      const mode = sortSel?.value ?? 'featured';
+
+      const ordered = cards.slice().sort((a, b) => {
+        switch (mode) {
+          case 'price-asc':
+            return n(a, 'price') - n(b, 'price');
+          case 'price-desc':
+            return n(b, 'price') - n(a, 'price');
+          case 'speed':
+            return n(b, 'speed') - n(a, 'speed');
+          case 'power':
+            return n(b, 'hp') - n(a, 'hp');
+          default:
+            return (
+              n(b, 'featured') - n(a, 'featured') || n(a, 'index') - n(b, 'index')
+            );
+        }
+      });
+      ordered.forEach((card) => grid!.appendChild(card));
+
+      let shown = 0;
+      cards.forEach((card) => {
+        const match = activeFilter === 'all' || card.dataset.category === activeFilter;
+        card.hidden = !match;
+        if (match) shown += 1;
+      });
+
+      if (countEl) countEl.textContent = `${shown} ${shown === 1 ? 'ski' : 'skis'}`;
+      if (emptyEl) emptyEl.hidden = shown !== 0;
+    }
+
+    chips.forEach((chip) => {
+      chip.addEventListener('click', () => {
+        activeFilter = chip.dataset.filter ?? 'all';
+        chips.forEach((c) => {
+          const on = c === chip;
+          c.classList.toggle('is-active', on);
+          c.setAttribute('aria-pressed', String(on));
+        });
+        render();
+      });
+    });
+
+    sortSel?.addEventListener('change', render);
+  }
+</script>
+
+<style>
+  /* ---------- toolbar (JS-enhanced) ---------- */
+  .fleet-toolbar {
+    display: none;
+  }
+  :global(.js) .fleet-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem 1.3rem;
+    margin-bottom: 1.85rem;
+    padding: 0.7rem 0.85rem;
+    border: 1px solid var(--line-2);
+    border-radius: var(--r);
+    background: rgba(16, 43, 60, 0.86);
+    backdrop-filter: blur(12px);
+    position: sticky;
+    top: calc(var(--header-h) + 0.55rem);
+    z-index: 20;
+  }
+
+  .ft-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .ft-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.5rem 0.9rem;
+    border-radius: var(--r-full);
+    border: 1px solid var(--line-2);
+    background: transparent;
+    color: var(--text-dim);
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--fs-sm);
+    cursor: pointer;
+    transition: color var(--t), border-color var(--t), background var(--t);
+  }
+  .ft-chip:hover {
+    color: var(--text);
+    border-color: var(--teal);
+  }
+  .ft-n {
+    font-size: 0.72rem;
+    padding: 0.06rem 0.42rem;
+    border-radius: var(--r-full);
+    background: var(--ink);
+    color: var(--text-mute);
+    transition: inherit;
+  }
+  .ft-chip.is-active {
+    background: var(--grad-teal);
+    border-color: transparent;
+    color: #052e2b;
+  }
+  .ft-chip.is-active .ft-n {
+    background: rgba(5, 46, 43, 0.24);
+    color: #052e2b;
+  }
+
+  .ft-end {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-left: auto;
+  }
+  .ft-count {
+    font-size: var(--fs-sm);
+    color: var(--text-mute);
+    white-space: nowrap;
+  }
+  .ft-sort {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .ft-sort-label {
+    font-size: var(--fs-sm);
+    color: var(--text-dim);
+  }
+  .ft-sort select {
+    width: auto;
+    padding: 0.55rem 2.4rem 0.55rem 0.85rem;
+    border-radius: var(--r-full);
+    font-size: var(--fs-sm);
+  }
+
+  /* ---------- grid ---------- */
+  .fleet-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.6rem;
+    align-items: stretch;
+  }
+  .fleet-empty {
+    margin-top: 2rem;
+    padding: 2.5rem 1rem;
+    text-align: center;
+    color: var(--text-dim);
+    border: 1px dashed var(--line-2);
+    border-radius: var(--r-lg);
+  }
+
+  .fleet-help {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1.8rem;
+    padding: 1.2rem 1.4rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+  }
+  .fleet-help-icon {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 2.8rem;
+    height: 2.8rem;
+    border-radius: 50%;
+    background: rgba(45, 212, 191, 0.12);
+    color: var(--teal-bright);
+  }
+  .fleet-help p {
+    font-size: var(--fs-sm);
+    color: var(--text-dim);
+  }
+
+  /* ---------- comparison table ---------- */
+  .compare-scroll {
+    overflow-x: auto;
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-lg);
+    -webkit-overflow-scrolling: touch;
+  }
+  .compare-table {
+    width: 100%;
+    min-width: 660px;
+    border-collapse: collapse;
+  }
+  .compare-table th,
+  .compare-table td {
+    padding: 1rem 1.15rem;
+    text-align: left;
+  }
+  .compare-table thead th {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--teal-bright);
+    background: var(--ink-2);
+    border-bottom: 1px solid var(--line-2);
+    white-space: nowrap;
+  }
+  .compare-table tbody tr {
+    border-bottom: 1px solid var(--line);
+    transition: background var(--t);
+  }
+  .compare-table tbody tr:last-child {
+    border-bottom: none;
+  }
+  .compare-table tbody tr:hover {
+    background: rgba(45, 212, 191, 0.06);
+  }
+  .compare-table tbody th {
+    font-weight: 600;
+  }
+  .ct-name {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 1.02rem;
+  }
+  .ct-brand {
+    display: block;
+    font-size: var(--fs-xs);
+    color: var(--text-mute);
+  }
+  .compare-table td {
+    color: var(--text-dim);
+    font-size: var(--fs-sm);
+    white-space: nowrap;
+  }
+  .ct-price {
+    color: var(--text) !important;
+    font-family: var(--font-display);
+    font-weight: 700;
+  }
+  .ct-book {
+    white-space: nowrap;
+  }
+
+  /* ---------- included band ---------- */
+  .included-band {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: clamp(2rem, 5vw, 3.5rem);
+    align-items: center;
+  }
+  .included-band-head {
+    max-width: 42ch;
+  }
+  .included-band-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.9rem;
+  }
+  .included-band-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    font-size: var(--fs-sm);
+    color: var(--text-dim);
+  }
+  .included-check {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 1.7rem;
+    height: 1.7rem;
+    border-radius: 50%;
+    background: rgba(52, 211, 153, 0.16);
+    color: var(--success);
+  }
+
+  /* ---------- cta ---------- */
+  .fleet-cta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: clamp(1.8rem, 4vw, 2.6rem);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-xl);
+  }
+  .fleet-cta .lead {
+    margin-top: 0.4rem;
+  }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 860px) {
+    .included-band {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 680px) {
+    .fleet-grid {
+      grid-template-columns: 1fr;
+      gap: 0.85rem;
+    }
+  }
+
+  /* comparison table collapses to stacked cards — a real table crams badly
+     on phones, so each ski becomes its own labelled spec block instead. */
+  @media (max-width: 800px) {
+    .compare-scroll {
+      overflow: visible;
+      border: none;
+      border-radius: 0;
+    }
+    .compare-table {
+      min-width: 0;
+      display: block;
+    }
+    .compare-table thead {
+      display: none;
+    }
+    .compare-table tbody {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.85rem;
+    }
+    .compare-table tr,
+    .compare-table tbody tr:hover {
+      display: flex;
+      flex-direction: column;
+      padding: 1rem 1rem 0.65rem;
+      border: 1px solid var(--line);
+      border-radius: var(--r-lg);
+      background: linear-gradient(165deg, var(--surface) 0%, var(--ink-2) 100%);
+    }
+    .compare-table tbody th[scope='row'] {
+      display: block;
+      padding: 0 0 0.85rem;
+      margin-bottom: 0.45rem;
+      border-bottom: 1px solid var(--line-2);
+    }
+    .ct-name {
+      font-size: 1.18rem;
+    }
+    .compare-table td {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+      padding: 0.5rem 0;
+      white-space: normal;
+      border-bottom: 1px solid var(--line);
+    }
+    .compare-table td::before {
+      content: attr(data-label);
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-mute);
+    }
+    .compare-table td.ct-book-cell {
+      margin-top: auto;
+      padding-top: 0.95rem;
+      border-bottom: none;
+    }
+    .compare-table td.ct-book-cell::before {
+      display: none;
+    }
+    .ct-book {
+      width: 100%;
+      justify-content: center;
+      padding: 0.72rem 1rem;
+      border-radius: var(--r-full);
+      background: rgba(45, 212, 191, 0.12);
+      border: 1px solid rgba(45, 212, 191, 0.32);
+    }
+  }
+  @media (max-width: 700px) {
+    :global(.js) .fleet-toolbar {
+      position: static;
+      flex-direction: column;
+      align-items: stretch;
+      border-radius: var(--r-lg);
+    }
+    .ft-end {
+      margin-left: 0;
+      justify-content: space-between;
+    }
+  }
+  @media (max-width: 520px) {
+    .included-band-list {
+      grid-template-columns: 1fr;
+    }
+    .fleet-cta {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .fleet-help {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.8rem;
+    }
+  }
+</style>

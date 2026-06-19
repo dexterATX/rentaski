@@ -1,0 +1,1075 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import Icon from '../components/Icon.astro';
+import DatePicker from '../components/DatePicker.astro';
+import { jetskis } from '../data/jetskis';
+import { addons } from '../data/addons';
+import { durations, timeSlots } from '../data/booking';
+import { pricingData } from '../lib/pricing';
+import { usd } from '../lib/format';
+import { site } from '../data/site';
+const bookingData = JSON.stringify(pricingData());
+const today = new Date().toISOString().slice(0, 10);
+const maxCapacity = Math.max(...jetskis.map((j) => j.capacity));
+---
+
+<BaseLayout
+  title="Book a Ride"
+  description="Reserve your Gulf Coast jet ski in about a minute. Choose your ski, date, and add-ons, then check out securely."
+  noindex={true}
+  hideMobileCta={true}
+>
+  <PageHeader
+    eyebrow="Reserve your ride"
+    title="Book your jet ski"
+    lead="Four quick steps and you're set. Your total updates as you go. Checkout is fast and secure."
+  />
+
+  <section class="section">
+    <div class="container">
+      <form id="booking-form" class="book-layout" method="POST" action="/api/checkout" novalidate>
+        <div class="book-main">
+          {/* ---- step 1: ski ---- */}
+          <fieldset class="book-step">
+            <legend>
+              <span class="step-badge">1</span>
+              <span class="step-titles">
+                Choose your ski
+                <span class="step-sub">Tap a ski to select it. Swap any time before checkout.</span>
+              </span>
+            </legend>
+            <div class="ski-options">
+              {
+                jetskis.map((j) => (
+                  <label class="opt ski-opt">
+                    <input type="radio" name="jetSkiId" value={j.id} required />
+                    <span class="opt-body ski-card">
+                      <span
+                        class="ski-card-photo"
+                        style={`--g1:${j.gradient[0]};--g2:${j.gradient[1]}`}
+                      >
+                        {j.image && (
+                          <img
+                            src={j.image}
+                            alt={j.name}
+                            width="320"
+                            height="200"
+                            loading="lazy"
+                            decoding="async"
+                            style={j.imagePosition ? `object-position:${j.imagePosition}` : undefined}
+                          />
+                        )}
+                        <span class="ski-card-cat">{j.category}</span>
+                        {j.featured && (
+                          <span class="ski-card-flag">
+                            <Icon name="star" size="0.68rem" />
+                            <span class="flag-text">Popular</span>
+                          </span>
+                        )}
+                        <span class="ski-card-check" aria-hidden="true">
+                          <Icon name="check" size="0.95rem" />
+                        </span>
+                      </span>
+                      <span class="ski-card-info">
+                        <span class="ski-card-name">{j.name}</span>
+                        <span class="ski-card-meta">
+                          {j.brand} · up to {j.capacity} riders
+                        </span>
+                        <span class="ski-card-price">
+                          <span class="scp-from">from</span>
+                          <strong>{usd(j.rates.hourly)}</strong>
+                          <span class="scp-unit">/ hour</span>
+                        </span>
+                      </span>
+                    </span>
+                  </label>
+                ))
+              }
+            </div>
+          </fieldset>
+
+          {/* ---- step 2: when ---- */}
+          <fieldset class="book-step">
+            <legend>
+              <span class="step-badge">2</span>
+              <span class="step-titles">
+                Pick your time
+                <span class="step-sub">Choose a date, a launch slot, and how many are riding.</span>
+              </span>
+            </legend>
+            <div class="when-grid">
+              <div class="when-date">
+                <DatePicker id="date" name="date" label="Date" min={today} />
+              </div>
+              <div class="when-secondary">
+                <div class="field">
+                  <label for="time">Launch time</label>
+                  <select id="time" name="time" required>
+                    <option value="" disabled selected>Select a time</option>
+                    {timeSlots.map((t) => <option value={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="riders">Riders</label>
+                  <select id="riders" name="riders" required>
+                    {
+                      Array.from({ length: maxCapacity }, (_, i) => i + 1).map((n) => (
+                        <option value={n}>{n} {n === 1 ? 'rider' : 'riders'}</option>
+                      ))
+                    }
+                  </select>
+                </div>
+              </div>
+            </div>
+            <p class="step-hint">
+              <Icon name="clock" size="0.95rem" /> We deliver and launch your ski at this
+              time. Be ready 10 minutes early for the safety briefing. {site.hoursNote}
+            </p>
+          </fieldset>
+
+          {/* ---- step 3: duration ---- */}
+          <fieldset class="book-step">
+            <legend>
+              <span class="step-badge">3</span>
+              <span class="step-titles">
+                How long?
+                <span class="step-sub">Prices update live once you've picked a ski.</span>
+              </span>
+            </legend>
+            <div class="dur-options">
+              {
+                durations.map((d) => (
+                  <label class="opt dur-opt">
+                    <input
+                      type="radio"
+                      name="duration"
+                      value={d.key}
+                      required
+                      checked={d.key === '2h'}
+                    />
+                    <span class="opt-body dur-card">
+                      {d.key === '2h' && <span class="dur-flag">Most booked</span>}
+                      <span class="dur-label">{d.label}</span>
+                      <span class="dur-sub">{d.sub}</span>
+                      <span class="dur-price" data-dur={d.key}>—</span>
+                    </span>
+                  </label>
+                ))
+              }
+            </div>
+          </fieldset>
+
+          {/* ---- step 4: add-ons ---- */}
+          <fieldset class="book-step">
+            <legend>
+              <span class="step-badge">4</span>
+              <span class="step-titles">
+                <span class="step-title-row">
+                  Add-ons <span class="legend-opt">Optional</span>
+                </span>
+                <span class="step-sub">Make the day yours. Every extra is added to your total below.</span>
+              </span>
+            </legend>
+            <div class="addon-options">
+              {
+                addons.map((a) => (
+                  <label class="opt addon-opt">
+                    <input type="checkbox" name="addons" value={a.id} />
+                    <span class="opt-body addon-body">
+                      <span class="addon-icon"><Icon name={a.icon} size="1.25rem" /></span>
+                      <span class="addon-info">
+                        <span class="addon-name">{a.name}</span>
+                        <span class="addon-desc">{a.description}</span>
+                      </span>
+                      <span class="addon-side">
+                        <span class="addon-price">+{usd(a.price)}</span>
+                        <span class="addon-check" aria-hidden="true">
+                          <Icon name="check" size="0.85rem" />
+                        </span>
+                      </span>
+                    </span>
+                  </label>
+                ))
+              }
+            </div>
+          </fieldset>
+
+          {/* ---- step 5: details ---- */}
+          <fieldset class="book-step">
+            <legend>
+              <span class="step-badge">5</span>
+              <span class="step-titles">
+                Your details
+                <span class="step-sub">Where we send your confirmation. That's all we need.</span>
+              </span>
+            </legend>
+            <div class="details-grid">
+              <div class="field details-full">
+                <label for="name">Full name</label>
+                <input type="text" id="name" name="name" autocomplete="name" required />
+              </div>
+              <div class="field">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" autocomplete="email" required />
+              </div>
+              <div class="field">
+                <label for="phone">Phone</label>
+                <input type="tel" id="phone" name="phone" autocomplete="tel" required />
+              </div>
+            </div>
+            <p class="step-hint">
+              <Icon name="lock" size="0.95rem" /> We use these only to confirm your
+              booking. You'll get a pending-order email when you proceed to pay, and
+              your full confirmation after checkout.
+            </p>
+          </fieldset>
+        </div>
+
+        {/* ---- summary ---- */}
+        <aside class="book-summary">
+          <div class="summary-card">
+            <p class="summary-eyebrow">
+              <Icon name="anchor" size="0.85rem" /> Your booking
+            </p>
+
+            <div class="summary-ski">
+              <span class="summary-thumb">
+                <img data-summary="ski-img" alt="" hidden />
+                <span class="summary-thumb-ph" data-summary="ski-ph">
+                  <Icon name="wave" size="1.5rem" />
+                </span>
+              </span>
+              <span class="summary-ski-text">
+                <strong data-summary="ski">Choose a ski</strong>
+                <span data-summary="ski-meta">Pick one above to begin</span>
+              </span>
+            </div>
+
+            <dl class="summary-rows">
+              <div><dt>When</dt><dd data-summary="when">Pick a date &amp; time</dd></div>
+              <div><dt>Duration</dt><dd data-summary="duration">2 Hours</dd></div>
+              <div><dt>Riders</dt><dd data-summary="riders">1</dd></div>
+            </dl>
+
+            <ul class="summary-lines" data-summary="lines" role="list">
+              <li class="summary-empty">Pick a ski and duration to see your price.</li>
+            </ul>
+
+            <div class="summary-total">
+              <span>Total</span>
+              <strong data-summary="total">—</strong>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg btn-block" id="checkout-btn">
+              <Icon name="lock" size="1rem" /> Continue to checkout
+            </button>
+            <p class="summary-error" data-summary="error" role="alert" hidden></p>
+
+            <ul class="summary-trust" role="list">
+              <li>
+                <Icon name="lock" size="1rem" />
+                Payments secured by Stripe
+              </li>
+              <li><Icon name="shield" size="1rem" /> {site.cancellation}</li>
+              <li><Icon name="clock" size="1rem" /> Takes about a minute</li>
+            </ul>
+          </div>
+        </aside>
+      </form>
+    </div>
+  </section>
+
+  <script type="application/json" id="booking-data" is:inline set:html={bookingData} />
+
+  <script>
+    const form = document.getElementById('booking-form');
+    const dataEl = document.getElementById('booking-data');
+
+    if (form instanceof HTMLFormElement && dataEl) {
+      const data = JSON.parse(dataEl.textContent || '{}');
+      const skis = data.jetskis || [];
+      const addonList = data.addons || [];
+      const durs = data.durations || [];
+
+      const money = (n) => '$' + Number(n).toLocaleString('en-US');
+      const pick = (sel) => form.querySelector(sel);
+      const out = (key) => form.querySelector(`[data-summary="${key}"]`);
+
+      const escapeHtml = (s) => {
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+      };
+
+      const selectedSki = () => {
+        const r = form.querySelector('input[name="jetSkiId"]:checked');
+        return r ? skis.find((s) => s.id === r.value) : null;
+      };
+      const selectedDuration = () => {
+        const r = form.querySelector('input[name="duration"]:checked');
+        return r ? durs.find((d) => d.key === r.value) : null;
+      };
+      const selectedAddons = () =>
+        [...form.querySelectorAll('input[name="addons"]:checked')].map((c) => c.value);
+
+      function render() {
+        const ski = selectedSki();
+        const dur = selectedDuration();
+
+        // live prices on each duration tile
+        form.querySelectorAll('.dur-price').forEach((el) => {
+          const d = durs.find((x) => x.key === el.getAttribute('data-dur'));
+          el.textContent = ski && d ? money(ski.rates[d.rateKey]) : '—';
+        });
+
+        // clamp riders to the chosen ski's capacity
+        const riders = pick('#riders');
+        if (ski) {
+          [...riders.options].forEach((o) => (o.disabled = Number(o.value) > ski.capacity));
+          if (Number(riders.value) > ski.capacity) riders.value = String(ski.capacity);
+        }
+
+        out('ski').textContent = ski ? ski.name : 'Choose a ski';
+        out('duration').textContent = dur ? dur.label : '—';
+        out('riders').textContent = riders.value;
+
+        // ski thumbnail + meta in the summary card
+        const skiMeta = out('ski-meta');
+        if (skiMeta) {
+          skiMeta.textContent = ski
+            ? `${ski.brand} · ${ski.category}`
+            : 'Pick one above to begin';
+        }
+        const skiImg = out('ski-img');
+        const skiPh = out('ski-ph');
+        if (skiImg && skiPh) {
+          if (ski && ski.image) {
+            skiImg.src = ski.image;
+            skiImg.hidden = false;
+            skiPh.hidden = true;
+          } else {
+            skiImg.hidden = true;
+            skiImg.removeAttribute('src');
+            skiPh.hidden = false;
+          }
+        }
+
+        const date = pick('#date').value;
+        const time = pick('#time').value;
+        if (date && time) {
+          const [y, m, d] = date.split('-').map(Number);
+          const label = new Date(y, m - 1, d).toLocaleDateString('en-US', {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+          });
+          out('when').textContent = `${label} · ${time}`;
+        } else {
+          out('when').textContent = 'Pick a date & time';
+        }
+
+        // line items + total
+        const lines = [];
+        let total = 0;
+        if (ski && dur) {
+          const base = ski.rates[dur.rateKey];
+          total += base;
+          lines.push({ label: `${ski.name} · ${dur.label}`, amount: base });
+        }
+        for (const id of selectedAddons()) {
+          const a = addonList.find((x) => x.id === id);
+          if (a) {
+            total += a.price;
+            lines.push({ label: a.name, amount: a.price });
+          }
+        }
+
+        const linesEl = out('lines');
+        if (lines.length) {
+          linesEl.innerHTML = lines
+            .map(
+              (l) =>
+                `<li><span>${escapeHtml(l.label)}</span><span>${money(l.amount)}</span></li>`,
+            )
+            .join('');
+        } else {
+          linesEl.innerHTML =
+            '<li class="summary-empty">Pick a ski and duration to see your price.</li>';
+        }
+        out('total').textContent = ski && dur ? money(total) : '—';
+      }
+
+      // preselect a ski from ?ski=
+      const skiParam = new URLSearchParams(location.search).get('ski');
+      if (skiParam) {
+        const radio = form.querySelector(
+          `input[name="jetSkiId"][value="${CSS.escape(skiParam)}"]`,
+        );
+        if (radio) radio.checked = true;
+      }
+
+      form.addEventListener('change', render);
+      form.addEventListener('input', render);
+      render();
+
+      // submit → Stripe Checkout (graceful: works without JS via a plain POST)
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const errEl = out('error');
+        errEl.hidden = true;
+
+        if (!form.checkValidity()) {
+          form.reportValidity();
+          return;
+        }
+
+        const fd = new FormData(form);
+        const payload = {
+          jetSkiId: fd.get('jetSkiId'),
+          duration: fd.get('duration'),
+          date: fd.get('date'),
+          time: fd.get('time'),
+          riders: fd.get('riders'),
+          addons: fd.getAll('addons'),
+          name: fd.get('name'),
+          email: fd.get('email'),
+          phone: fd.get('phone'),
+        };
+
+        const btn = document.getElementById('checkout-btn');
+        const original = btn.innerHTML;
+        btn.disabled = true;
+        btn.textContent = 'Redirecting to checkout…';
+
+        try {
+          const res = await fetch('/api/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          const result = await res.json();
+          if (res.ok && result.url) {
+            window.location.href = result.url;
+            return;
+          }
+          throw new Error(result.error || 'We could not start checkout. Please try again.');
+        } catch (err) {
+          errEl.textContent = err instanceof Error ? err.message : String(err);
+          errEl.hidden = false;
+          btn.disabled = false;
+          btn.innerHTML = original;
+        }
+      });
+    }
+  </script>
+</BaseLayout>
+
+<style>
+  /* ---- layout ---- */
+  .book-layout {
+    display: grid;
+    grid-template-columns: 1fr 372px;
+    gap: 1.6rem;
+    align-items: start;
+  }
+  .book-main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+  }
+
+  /* ---- step card ---- */
+  .book-step {
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    background: linear-gradient(180deg, var(--surface) 0%, var(--ink-2) 100%);
+    padding: 1.7rem;
+    transition: border-color var(--t);
+  }
+  .book-step:focus-within {
+    border-color: rgba(45, 212, 191, 0.4);
+  }
+  .book-step legend {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    padding: 0;
+    margin-bottom: 1.35rem;
+  }
+  .step-badge {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 2.2rem;
+    height: 2.2rem;
+    border-radius: var(--r-sm);
+    background: var(--grad-teal);
+    color: #04212a;
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 800;
+    box-shadow: 0 8px 18px -8px rgba(45, 212, 191, 0.7);
+  }
+  .step-titles {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding-top: 0.05rem;
+    font-family: var(--font-display);
+    font-size: 1.32rem;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+  .step-sub {
+    font-family: var(--font-body);
+    font-size: var(--fs-xs);
+    font-weight: 400;
+    color: var(--text-mute);
+  }
+  .step-title-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .legend-opt {
+    font-family: var(--font-body);
+    font-size: 0.58rem;
+    font-weight: 700;
+    color: var(--teal);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding: 0.2rem 0.5rem;
+    border-radius: var(--r-full);
+    background: rgba(45, 212, 191, 0.12);
+    border: 1px solid rgba(45, 212, 191, 0.25);
+  }
+  .step-hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-top: 1.1rem;
+    padding: 0.72rem 0.85rem;
+    border-radius: var(--r-sm);
+    background: rgba(45, 212, 191, 0.06);
+    border: 1px solid rgba(45, 212, 191, 0.14);
+    font-size: var(--fs-xs);
+    color: var(--text-dim);
+  }
+  .step-hint :global(svg) {
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+    color: var(--teal);
+  }
+
+  /* ---- step 1 · ski picker ---- */
+  .ski-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem;
+    align-items: stretch;
+  }
+  .ski-opt {
+    height: 100%;
+  }
+  .ski-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 0;
+    overflow: hidden;
+  }
+  .ski-card-photo {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    background: linear-gradient(150deg, var(--g1), var(--g2));
+    overflow: hidden;
+  }
+  .ski-card-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* bias the crop toward the upper part so the rider's face stays in frame */
+    object-position: center 35%;
+    transition: transform var(--t-slow);
+  }
+  .ski-opt:hover .ski-card-photo img {
+    transform: scale(1.06);
+  }
+  .ski-card-cat,
+  .ski-card-flag {
+    position: absolute;
+    top: 0.4rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.13rem 0.38rem;
+    border-radius: var(--r-full);
+    font-size: 0.5rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .ski-card-cat {
+    left: 0.4rem;
+    background: rgba(6, 22, 32, 0.72);
+    backdrop-filter: blur(4px);
+    color: #fff;
+  }
+  .ski-card-flag {
+    right: 0.4rem;
+    background: var(--grad-sun);
+    color: #2a1206;
+  }
+  .ski-card-flag :global(svg) {
+    width: 0.55rem;
+    height: 0.55rem;
+  }
+  .ski-card-check {
+    position: absolute;
+    bottom: 0.4rem;
+    right: 0.4rem;
+    display: grid;
+    place-items: center;
+    width: 1.4rem;
+    height: 1.4rem;
+    border-radius: 50%;
+    background: var(--teal);
+    color: #04212a;
+    box-shadow: 0 0 0 2px var(--surface), 0 4px 12px rgba(0, 0, 0, 0.45);
+    opacity: 0;
+    transform: scale(0.5);
+    transition: opacity var(--t), transform var(--t);
+  }
+  .ski-card-check :global(svg) {
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+  .ski-opt:has(input:checked) .ski-card-check {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  /* clear "this one is selected" treatment */
+  .ski-opt:has(input:checked) .ski-card {
+    border-color: var(--teal);
+    background: rgba(45, 212, 191, 0.13);
+    box-shadow: 0 0 0 2px var(--teal), 0 10px 26px -10px rgba(45, 212, 191, 0.55);
+    transform: translateY(-3px);
+  }
+  .ski-opt:has(input:checked) .ski-card-name {
+    color: var(--teal-bright);
+  }
+  .ski-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.16rem;
+    padding: 0.8rem 0.85rem 0.9rem;
+  }
+  .ski-card-name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.98rem;
+    line-height: 1.25;
+  }
+  .ski-card-meta {
+    font-size: 0.72rem;
+    color: var(--text-mute);
+  }
+  .ski-card-price {
+    display: flex;
+    align-items: baseline;
+    gap: 0.28rem;
+    margin-top: 0.45rem;
+  }
+  .ski-card-price strong {
+    font-family: var(--font-display);
+    font-size: 1.12rem;
+    color: var(--teal-bright);
+  }
+  .scp-from,
+  .scp-unit {
+    font-size: var(--fs-xs);
+    color: var(--text-mute);
+  }
+
+  /* ---- step 2 · when ---- */
+  .when-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.85fr);
+    gap: 0.85rem;
+    align-items: start;
+  }
+  .when-date {
+    min-width: 0;
+  }
+  .when-secondary {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 0.85rem;
+    min-width: 0;
+  }
+  .when-grid :global(.date-picker) {
+    min-width: 0;
+  }
+
+  /* ---- step 3 · duration ---- */
+  .dur-options {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+  }
+  .dur-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.14rem;
+    padding: 1.3rem 0.7rem 1.1rem;
+  }
+  .dur-flag {
+    position: absolute;
+    top: -0.62rem;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    padding: 0.2rem 0.55rem;
+    border-radius: var(--r-full);
+    background: var(--grad-sun);
+    color: #2a1206;
+    font-size: 0.56rem;
+    font-weight: 800;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+  .dur-label {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.02rem;
+  }
+  .dur-sub {
+    font-size: 0.68rem;
+    color: var(--text-mute);
+    line-height: 1.3;
+  }
+  .dur-price {
+    margin-top: 0.55rem;
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--teal-bright);
+  }
+
+  /* ---- step 4 · add-ons ---- */
+  .addon-options {
+    display: grid;
+    gap: 0.7rem;
+  }
+  .addon-body {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+  }
+  .addon-icon {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 2.85rem;
+    height: 2.85rem;
+    border-radius: var(--r-sm);
+    background: rgba(45, 212, 191, 0.1);
+    border: 1px solid rgba(45, 212, 191, 0.18);
+    color: var(--teal-bright);
+    transition: background var(--t), color var(--t);
+  }
+  .addon-opt:has(input:checked) .addon-icon {
+    background: var(--grad-teal);
+    color: #04212a;
+  }
+  .addon-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .addon-name {
+    font-family: var(--font-display);
+    font-weight: 600;
+  }
+  .addon-desc {
+    display: block;
+    margin-top: 0.2rem;
+    font-size: var(--fs-xs);
+    color: var(--text-dim);
+  }
+  .addon-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.45rem;
+    flex-shrink: 0;
+  }
+  .addon-price {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--sun-bright);
+    font-size: var(--fs-sm);
+  }
+  .addon-check {
+    display: grid;
+    place-items: center;
+    width: 1.55rem;
+    height: 1.55rem;
+    border-radius: 50%;
+    border: 1px solid var(--line-2);
+    color: transparent;
+    transition: background var(--t), border-color var(--t), color var(--t);
+  }
+  .addon-opt:has(input:checked) .addon-check {
+    background: var(--teal);
+    border-color: var(--teal);
+    color: #04212a;
+  }
+
+  /* ---- step 5 · details ---- */
+  .details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.95rem;
+  }
+  .details-full {
+    grid-column: 1 / -1;
+  }
+
+  /* ---- summary ---- */
+  .book-summary {
+    position: sticky;
+    top: calc(var(--header-h) + 1.1rem);
+  }
+  .summary-card {
+    background: linear-gradient(180deg, var(--surface) 0%, var(--ink) 100%);
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-lg);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+  }
+  .summary-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--teal);
+  }
+  .summary-ski {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-top: 0.95rem;
+    padding-bottom: 1.1rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .summary-thumb {
+    position: relative;
+    flex-shrink: 0;
+    width: 4.4rem;
+    height: 3.2rem;
+    border-radius: var(--r-sm);
+    overflow: hidden;
+    background: var(--grad-teal);
+  }
+  .summary-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 35%;
+  }
+  .summary-thumb-ph {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: #04212a;
+  }
+  .summary-ski-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.16rem;
+    min-width: 0;
+  }
+  .summary-ski-text strong {
+    font-family: var(--font-display);
+    font-size: 1.06rem;
+  }
+  .summary-ski-text span {
+    font-size: var(--fs-xs);
+    color: var(--text-mute);
+  }
+  .summary-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin: 1.1rem 0;
+  }
+  .summary-rows > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: var(--fs-sm);
+  }
+  .summary-rows dt {
+    color: var(--text-mute);
+  }
+  .summary-rows dd {
+    font-weight: 600;
+    text-align: right;
+  }
+  .summary-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    padding: 1.05rem 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    min-height: 3rem;
+  }
+  .summary-lines li {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: var(--fs-sm);
+    color: var(--text-dim);
+  }
+  .summary-lines li span:last-child {
+    font-family: var(--font-display);
+    font-weight: 600;
+    color: var(--text);
+  }
+  .summary-empty {
+    color: var(--text-mute);
+    font-size: var(--fs-xs) !important;
+  }
+  .summary-total {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin: 1.15rem 0 1.3rem;
+  }
+  .summary-total span {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.15rem;
+  }
+  .summary-total strong {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--teal-bright);
+  }
+  .summary-error {
+    margin-top: 0.8rem;
+    padding: 0.7rem 0.9rem;
+    background: rgba(251, 113, 133, 0.12);
+    border: 1px solid rgba(251, 113, 133, 0.4);
+    border-radius: var(--r-sm);
+    color: #fda4af;
+    font-size: var(--fs-xs);
+  }
+  .summary-trust {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--line);
+  }
+  .summary-trust li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: var(--fs-xs);
+    color: var(--text-mute);
+  }
+  .summary-trust :global(svg) {
+    color: var(--teal);
+    flex-shrink: 0;
+  }
+
+  /* ---- responsive ---- */
+  @media (max-width: 940px) {
+    .book-layout {
+      grid-template-columns: 1fr;
+    }
+    .book-summary {
+      position: static;
+    }
+  }
+  @media (max-width: 760px) {
+    .when-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+  }
+  @media (max-width: 680px) {
+    .dur-options {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  @media (max-width: 680px) {
+    .ski-options {
+      grid-template-columns: 1fr;
+    }
+  }
+  @media (max-width: 560px) {
+    .book-step {
+      padding: 1.25rem;
+    }
+    .when-secondary,
+    .details-grid {
+      grid-template-columns: 1fr;
+    }
+    .when-secondary {
+      gap: 0.95rem;
+    }
+    .when-grid :global(.date-picker-trigger) {
+      min-height: 3.35rem;
+      font-size: 1rem;
+    }
+    /* collapse the "Popular" flag to a compact star so the category
+       badge always has room and never gets clipped on narrow cards */
+    .ski-card-flag {
+      padding: 0.32rem;
+      border-radius: 50%;
+    }
+    /* keep "Popular" for screen readers; show only the star visually */
+    .flag-text {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    .ski-card-cat {
+      max-width: calc(100% - 2.4rem);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+  @media (max-width: 430px) {
+    .ski-options {
+      gap: 0.6rem;
+    }
+    .ski-card-info {
+      padding: 0.7rem 0.7rem 0.8rem;
+    }
+    .ski-card-name {
+      font-size: 0.9rem;
+    }
+  }
+</style>

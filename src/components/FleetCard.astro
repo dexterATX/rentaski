@@ -1,0 +1,472 @@
+---
+// Premium fleet card — photo, visual spec meters, highlights, rate ladder.
+// Carries data-* attributes so the fleet page can filter and sort it client-side.
+import { jetskis, type JetSki } from '../data/jetskis';
+import type { IconName } from '../lib/icons';
+import Icon from './Icon.astro';
+import { usd } from '../lib/format';
+
+interface Props {
+  jetski: JetSki;
+  /** Original position in the fleet — used as the "Featured" sort tiebreaker. */
+  index: number;
+}
+
+const { jetski, index } = Astro.props;
+
+const maxSpeed = Math.max(...jetskis.map((j) => j.topSpeed));
+const maxHp = Math.max(...jetskis.map((j) => j.hp));
+
+const meters: { label: string; value: string; pct: number; tone: string }[] = [
+  {
+    label: 'Top speed',
+    value: `${jetski.topSpeed} mph`,
+    pct: Math.round((jetski.topSpeed / maxSpeed) * 100),
+    tone: 'teal',
+  },
+  {
+    label: 'Power',
+    value: `${jetski.hp} hp`,
+    pct: Math.round((jetski.hp / maxHp) * 100),
+    tone: 'sun',
+  },
+];
+
+const stats: { icon: IconName; label: string }[] = [
+  { icon: 'riders', label: `Up to ${jetski.capacity} riders` },
+  { icon: 'weight', label: `${jetski.weightCapacity} lb capacity` },
+];
+
+const rateTiers = [
+  { label: '1 hour', amount: jetski.rates.hourly },
+  { label: '2 hours', amount: jetski.rates.twoHour },
+  { label: 'Half day', amount: jetski.rates.halfDay },
+  { label: 'Full day', amount: jetski.rates.fullDay },
+];
+---
+
+<article
+  class="fleet-card"
+  data-fleet-card
+  data-category={jetski.category}
+  data-price={jetski.rates.hourly}
+  data-speed={jetski.topSpeed}
+  data-hp={jetski.hp}
+  data-featured={jetski.featured ? '1' : '0'}
+  data-index={index}
+>
+  <div
+    class="fc-photo"
+    style={`--g1:${jetski.gradient[0]};--g2:${jetski.gradient[1]}`}
+  >
+    {
+      jetski.image && (
+        <img
+          src={jetski.image}
+          alt={`${jetski.name} jet ski`}
+          width="720"
+          height="450"
+          loading="lazy"
+          decoding="async"
+          style={jetski.imagePosition ? `object-position:${jetski.imagePosition}` : undefined}
+        />
+      )
+    }
+    <span class="fc-cat">{jetski.category}</span>
+    {
+      jetski.featured && (
+        <span class="fc-flag">
+          <Icon name="star" size="0.8rem" />
+          <span class="fc-flag-text">Crowd favorite</span>
+        </span>
+      )
+    }
+  </div>
+
+  <div class="fc-body">
+    <p class="fc-brand">{jetski.brand} · {jetski.year}</p>
+    <h3 class="fc-name">{jetski.name}</h3>
+    <p class="fc-tag">{jetski.tagline}</p>
+
+    <ul class="fc-stats" role="list">
+      {
+        stats.map((s) => (
+          <li>
+            <Icon name={s.icon} size="0.95rem" />
+            {s.label}
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="fc-meters">
+      {
+        meters.map((m) => (
+          <div class="fc-meter" data-tone={m.tone}>
+            <div class="fc-meter-head">
+              <span>{m.label}</span>
+              <strong>{m.value}</strong>
+            </div>
+            <div class="fc-meter-track">
+              <span class="fc-meter-fill" style={`width:${m.pct}%`} />
+            </div>
+          </div>
+        ))
+      }
+    </div>
+
+    <ul class="fc-highlights" role="list">
+      {
+        jetski.highlights.map((h) => (
+          <li>
+            <Icon name="check" size="0.9rem" />
+            {h}
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="fc-desc">{jetski.description}</p>
+
+    <div class="fc-rates" aria-label="Rental rates">
+      {
+        rateTiers.map((t) => (
+          <div class="fc-rate">
+            <span>{t.label}</span>
+            <strong>{usd(t.amount)}</strong>
+          </div>
+        ))
+      }
+    </div>
+
+    <div class="fc-foot">
+      <p class="fc-price">
+        <span>from</span>
+        <strong>{usd(jetski.rates.hourly)}</strong>
+        <span>/ hour</span>
+      </p>
+      <a href={`/book?ski=${jetski.id}`} class="btn btn-primary fc-book">
+        Book this ski <Icon name="arrow-right" size="1rem" />
+      </a>
+    </div>
+  </div>
+</article>
+
+<style>
+  .fleet-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    background: linear-gradient(180deg, var(--surface) 0%, var(--ink-2) 100%);
+    transition: transform var(--t), border-color var(--t), box-shadow var(--t);
+  }
+  .fleet-card[hidden] {
+    display: none;
+  }
+  .fleet-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(45, 212, 191, 0.42);
+    box-shadow: var(--shadow);
+  }
+
+  /* photo */
+  .fc-photo {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    background: linear-gradient(150deg, var(--g1), var(--g2));
+    overflow: hidden;
+  }
+  .fc-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* bias the crop toward the upper part so the rider's face stays in frame */
+    object-position: center 35%;
+    transition: transform var(--t-slow);
+  }
+  .fleet-card:hover .fc-photo img {
+    transform: scale(1.05);
+  }
+  .fc-cat,
+  .fc-flag {
+    position: absolute;
+    top: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.22rem 0.58rem;
+    border-radius: var(--r-full);
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .fc-cat {
+    left: 0.85rem;
+    background: rgba(6, 22, 32, 0.66);
+    backdrop-filter: blur(4px);
+    color: #fff;
+  }
+  .fc-flag {
+    right: 0.85rem;
+    background: var(--grad-sun);
+    color: #2a1206;
+  }
+
+  /* body */
+  .fc-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 1.5rem;
+  }
+  .fc-brand {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--teal);
+  }
+  .fc-name {
+    margin-top: 0.25rem;
+    font-size: 1.4rem;
+  }
+  .fc-tag {
+    margin-top: 0.25rem;
+    color: var(--text-dim);
+    font-size: var(--fs-sm);
+  }
+
+  .fc-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.1rem;
+    margin-top: 0.95rem;
+    padding-top: 0.95rem;
+    border-top: 1px solid var(--line);
+  }
+  .fc-stats li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: var(--fs-xs);
+    color: var(--text-dim);
+  }
+  .fc-stats :global(svg) {
+    color: var(--teal);
+  }
+
+  /* spec meters */
+  .fc-meters {
+    display: grid;
+    gap: 0.7rem;
+    margin-top: 1.1rem;
+  }
+  .fc-meter-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.35rem;
+  }
+  .fc-meter-head span {
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-mute);
+  }
+  .fc-meter-head strong {
+    font-family: var(--font-display);
+    font-size: var(--fs-sm);
+  }
+  .fc-meter-track {
+    height: 7px;
+    border-radius: var(--r-full);
+    background: var(--ink);
+    overflow: hidden;
+  }
+  .fc-meter-fill {
+    display: block;
+    height: 100%;
+    border-radius: var(--r-full);
+  }
+  .fc-meter[data-tone='teal'] .fc-meter-fill {
+    background: var(--grad-teal);
+  }
+  .fc-meter[data-tone='sun'] .fc-meter-fill {
+    background: var(--grad-sun);
+  }
+
+  /* highlights */
+  .fc-highlights {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-top: 1.1rem;
+  }
+  .fc-highlights li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.32rem 0.65rem;
+    border-radius: var(--r-full);
+    background: rgba(45, 212, 191, 0.1);
+    border: 1px solid rgba(45, 212, 191, 0.2);
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    color: var(--text-dim);
+  }
+  .fc-highlights :global(svg) {
+    color: var(--teal-bright);
+    flex-shrink: 0;
+  }
+
+  .fc-desc {
+    margin-top: 1.1rem;
+    color: var(--text-dim);
+    font-size: var(--fs-sm);
+  }
+
+  /* rate ladder */
+  .fc-rates {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.45rem;
+    margin-top: 1.2rem;
+  }
+  .fc-rate {
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+    padding: 0.6rem 0.4rem;
+    background: var(--ink-2);
+    border: 1px solid var(--line);
+    border-radius: var(--r-xs);
+    text-align: center;
+  }
+  .fc-rate span {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-mute);
+  }
+  .fc-rate strong {
+    font-family: var(--font-display);
+    font-size: var(--fs-sm);
+  }
+
+  /* footer */
+  .fc-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: auto;
+    padding-top: 1.3rem;
+  }
+  .fc-price {
+    display: flex;
+    align-items: baseline;
+    gap: 0.25rem;
+  }
+  .fc-price span {
+    font-size: var(--fs-xs);
+    color: var(--text-mute);
+  }
+  .fc-price strong {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.7rem;
+    color: var(--text);
+  }
+
+  /* ---- compact two-up tile for mobile ----
+     The full card (spec meters, highlight pills, description, 4-tier rate
+     ladder) is far too much for a ~165px column — it stretches into a tall
+     strip. On mobile each card becomes a lean photo-led tile: photo, name,
+     a one-line spec, price and a book button. The deeper detail still lives
+     in the "Compare the full fleet" section below. */
+  @media (max-width: 680px) {
+    .fc-body {
+      padding: 0.95rem 1rem 1.05rem;
+    }
+    .fc-brand {
+      font-size: 0.62rem;
+    }
+    .fc-name {
+      margin-top: 0.25rem;
+      font-size: 1.12rem;
+      line-height: 1.22;
+    }
+    .fc-tag {
+      margin-top: 0.3rem;
+      font-size: var(--fs-xs);
+    }
+
+    /* hide the detail-heavy blocks that make the column stretch */
+    .fc-meters,
+    .fc-highlights,
+    .fc-desc,
+    .fc-rates {
+      display: none;
+    }
+
+    /* keep one tidy spec row */
+    .fc-stats {
+      gap: 0.3rem 0.7rem;
+      margin-top: 0.7rem;
+      padding-top: 0.7rem;
+    }
+    .fc-stats li {
+      font-size: 0.7rem;
+    }
+
+    /* badges: collapse "Crowd favorite" to a star so the category stays clear */
+    .fc-cat,
+    .fc-flag {
+      top: 0.55rem;
+      font-size: 0.62rem;
+      padding: 0.28rem 0.55rem;
+    }
+    .fc-cat {
+      left: 0.55rem;
+    }
+    .fc-flag {
+      right: 0.55rem;
+      padding: 0.32rem;
+      border-radius: 50%;
+    }
+    .fc-flag-text {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* stacked, full-width price + book footer */
+    .fc-foot {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.6rem;
+      margin-top: 0.95rem;
+      padding-top: 0.95rem;
+      border-top: 1px solid var(--line);
+    }
+    .fc-price {
+      justify-content: center;
+    }
+    .fc-price strong {
+      font-size: 1.4rem;
+    }
+    .fc-book {
+      justify-content: center;
+    }
+  }
+</style>

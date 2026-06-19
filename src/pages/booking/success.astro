@@ -1,0 +1,288 @@
+---
+export const prerender = false;
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Icon from '../../components/Icon.astro';
+import { site } from '../../data/site';
+import { usd, longDate } from '../../lib/format';
+import { stripe } from '../../lib/stripe';
+import { fulfillPaidCheckoutSession } from '../../lib/fulfillment';
+
+const params = Astro.url.searchParams;
+const sessionId = params.get('session_id');
+
+interface Confirmed {
+  ref: string;
+  total: number;
+  email?: string;
+  jetSki?: string;
+  duration?: string;
+  date?: string;
+  time?: string;
+  riders?: string;
+  addons?: string;
+}
+
+let booking: Confirmed | null = null;
+let problem: string | null = null;
+
+if (sessionId && stripe) {
+  try {
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    if (session.payment_status === 'paid' || session.status === 'complete') {
+      const meta = session.metadata ?? {};
+      booking = {
+        ref: session.id.slice(-8).toUpperCase(),
+        total: (session.amount_total ?? 0) / 100,
+        email: session.customer_details?.email ?? session.customer_email ?? undefined,
+        jetSki: meta.jetSki,
+        duration: meta.duration,
+        date: meta.date,
+        time: meta.time,
+        riders: meta.riders,
+        addons: meta.addons,
+      };
+
+      // Webhook fallback: send confirmation emails when Stripe redirects here
+      // before (or instead of) the webhook — common in local dev.
+      await fulfillPaidCheckoutSession(session);
+    } else {
+      problem = 'This checkout session has not completed payment yet.';
+    }
+  } catch {
+    problem =
+      "We couldn't locate that booking. If you were charged, contact us and we'll sort it out right away.";
+  }
+} else if (sessionId && !stripe) {
+  problem = 'Payments are not configured on this server.';
+} else {
+  problem = 'No booking reference was found in the link.';
+}
+
+const details: { label: string; value: string }[] = booking
+  ? [
+      { label: 'Jet ski', value: booking.jetSki },
+      { label: 'Date', value: booking.date ? longDate(booking.date) : undefined },
+      { label: 'Launch time', value: booking.time },
+      { label: 'Duration', value: booking.duration },
+      { label: 'Riders', value: booking.riders },
+      { label: 'Add-ons', value: booking.addons && booking.addons !== 'None' ? booking.addons : undefined },
+    ].filter((d): d is { label: string; value: string } => Boolean(d.value))
+  : [];
+
+const arrivalNotes = [
+  "We'll text you a 30-minute delivery window the morning of your ride.",
+  'Have a government-issued photo ID and the card used to book ready for our crew.',
+  'Wear a swimsuit. We bring life jackets and all safety gear.',
+  'Born on or after Jan 1, 1988? We issue your free Florida boater card on the spot.',
+];
+---
+
+<BaseLayout title={booking ? "You're booked" : 'Booking'} noindex={true}>
+  <section class="result">
+    <div class="container container-narrow">
+      {
+        booking ? (
+          <div class="result-inner">
+            <span class="result-icon"><Icon name="check" size="2.3rem" /></span>
+            <p class="eyebrow center">Booking confirmed</p>
+            <h1>You're booked, see you on the water!</h1>
+            <p class="lead">
+              {booking.email
+                ? `A confirmation is on its way to ${booking.email}.`
+                : 'Your booking is locked in.'}
+            </p>
+
+            <div class="ticket">
+              <div class="ticket-head">
+                <span>Booking reference</span>
+                <strong>{booking.ref}</strong>
+              </div>
+              <dl class="ticket-rows">
+                {details.map((d) => (
+                  <div>
+                    <dt>{d.label}</dt>
+                    <dd>{d.value}</dd>
+                  </div>
+                ))}
+                <div class="ticket-total">
+                  <dt>Paid today</dt>
+                  <dd>{usd(booking.total)}</dd>
+                </div>
+              </dl>
+            </div>
+
+            <div class="next">
+              <h2>Before your ride</h2>
+              <ul role="list">
+                {arrivalNotes.map((note) => (
+                  <li>
+                    <span class="next-check"><Icon name="check" size="0.95rem" /></span>
+                    {note}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div class="result-actions">
+              <a href="/" class="btn btn-primary btn-lg">Back to home</a>
+              <a href={`tel:${site.phoneHref}`} class="btn btn-ghost btn-lg">
+                <Icon name="phone" size="1.05rem" /> {site.phone}
+              </a>
+            </div>
+          </div>
+        ) : (
+          <div class="result-inner">
+            <span class="result-icon error" aria-hidden="true">!</span>
+            <p class="eyebrow center">Something's off</p>
+            <h1>We couldn't confirm that booking</h1>
+            <p class="lead">{problem}</p>
+            <div class="result-actions">
+              <a href="/book" class="btn btn-primary btn-lg">Try booking again</a>
+              <a href="/contact" class="btn btn-ghost btn-lg">Contact us</a>
+            </div>
+          </div>
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .result {
+    padding-top: calc(var(--header-h) + clamp(2.5rem, 7vw, 5rem));
+    padding-bottom: clamp(3.5rem, 8vw, 6rem);
+  }
+  .result-inner {
+    text-align: center;
+  }
+  .result-icon {
+    display: grid;
+    place-items: center;
+    width: 5rem;
+    height: 5rem;
+    margin: 0 auto 1.6rem;
+    border-radius: 50%;
+    background: rgba(52, 211, 153, 0.15);
+    color: var(--success);
+    box-shadow: 0 0 0 10px rgba(52, 211, 153, 0.07);
+  }
+  .result-icon.error {
+    background: rgba(251, 113, 133, 0.15);
+    color: var(--danger);
+    box-shadow: 0 0 0 10px rgba(251, 113, 133, 0.07);
+    font-family: var(--font-display);
+    font-size: 2.6rem;
+    font-weight: 700;
+  }
+  .result h1 {
+    margin-top: 0.9rem;
+  }
+  .result .lead {
+    margin-top: 0.9rem;
+  }
+
+  .ticket {
+    margin-top: 2rem;
+    text-align: left;
+    background: var(--surface);
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+  }
+  .ticket-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.1rem 1.5rem;
+    background: linear-gradient(135deg, #0e3a4f, #0c2c3d);
+    border-bottom: 1px dashed var(--line-2);
+  }
+  .ticket-head span {
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-dim);
+  }
+  .ticket-head strong {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    letter-spacing: 0.06em;
+    color: var(--teal-bright);
+  }
+  .ticket-rows {
+    padding: 0.6rem 1.5rem 1.2rem;
+  }
+  .ticket-rows > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--line);
+    font-size: var(--fs-sm);
+  }
+  .ticket-rows dt {
+    color: var(--text-mute);
+  }
+  .ticket-rows dd {
+    font-weight: 600;
+    text-align: right;
+  }
+  .ticket-total {
+    border-bottom: none !important;
+    margin-top: 0.3rem;
+  }
+  .ticket-total dt {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    color: var(--text) !important;
+  }
+  .ticket-total dd {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    color: var(--teal-bright);
+  }
+
+  .next {
+    margin-top: 2rem;
+    text-align: left;
+    padding: 1.6rem;
+    background: var(--ink-2);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+  }
+  .next h2 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+  }
+  .next ul {
+    display: grid;
+    gap: 0.8rem;
+  }
+  .next li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    font-size: var(--fs-sm);
+    color: var(--text-dim);
+  }
+  .next-check {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    background: rgba(52, 211, 153, 0.16);
+    color: var(--success);
+  }
+
+  .result-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.9rem;
+    margin-top: 2.2rem;
+  }
+</style>

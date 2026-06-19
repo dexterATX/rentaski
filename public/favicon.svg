@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="rentaSkii">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0d3046"/>
+      <stop offset="1" stop-color="#061620"/>
+    </linearGradient>
+    <linearGradient id="sun" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffb054"/>
+      <stop offset="1" stop-color="#ff5e62"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="url(#sky)"/>
+  <circle cx="32" cy="27" r="11" fill="url(#sun)"/>
+  <g fill="none" stroke="#5eead4" stroke-width="4.5" stroke-linecap="round">
+    <path d="M9 41c4 0 4-3.6 8-3.6S21 41 25 41s4-3.6 8-3.6S37 41 41 41s4-3.6 8-3.6S53 41 55 41"/>
+    <path d="M9 51c4 0 4-3.6 8-3.6S21 51 25 51s4-3.6 8-3.6S37 51 41 51s4-3.6 8-3.6S53 51 55 51" stroke="#2dd4bf"/>
+  </g>
+</svg>

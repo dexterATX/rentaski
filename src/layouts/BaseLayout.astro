@@ -1,0 +1,179 @@
+---
+import '@fontsource-variable/outfit';
+import '@fontsource-variable/inter';
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import MobileCTA from '../components/MobileCTA.astro';
+import { site } from '../data/site';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Path or URL of the social-share image. */
+  image?: string;
+  noindex?: boolean;
+  /** Hide the sticky mobile Book bar (e.g. on the booking page itself). */
+  hideMobileCta?: boolean;
+}
+
+const {
+  title,
+  description = site.description,
+  image = '/logo.png',
+  noindex = false,
+  hideMobileCta = false,
+} = Astro.props;
+
+const base = Astro.site ?? new URL(Astro.url.origin);
+const pageTitle = title ? `${title} · ${site.name}` : `${site.name} · ${site.tagline}`;
+const canonical = new URL(Astro.url.pathname, base).href;
+const ogImage = new URL(image, base).href;
+
+const businessSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'SportsActivityLocation',
+  name: site.name,
+  description: site.description,
+  url: site.url,
+  telephone: site.phoneHref,
+  email: site.email,
+  image: ogImage,
+  priceRange: '$$',
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: site.homeBase.city,
+    addressRegion: site.homeBase.state,
+    addressCountry: 'US',
+  },
+  areaServed: site.serviceAreas.map((a) => ({ '@type': 'Place', name: a })),
+  openingHours: ['Mo-Fr 08:00-18:00', 'Sa-Su 07:00-19:00'],
+  aggregateRating: {
+    '@type': 'AggregateRating',
+    ratingValue: site.rating.value,
+    reviewCount: site.rating.count,
+  },
+  sameAs: [site.social.instagram, site.social.facebook, site.social.tiktok],
+};
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script is:inline>
+      document.documentElement.classList.add('js');
+    </script>
+    <link rel="icon" href="/favicon.png" type="image/png" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    <meta name="theme-color" content="#061620" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <script
+      type="application/ld+json"
+      is:inline
+      set:html={JSON.stringify(businessSchema)}
+    />
+
+    <slot name="head" />
+  </head>
+  <body>
+    <a href="#main" class="skip-link">Skip to content</a>
+    <Header />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer />
+    {!hideMobileCta && <MobileCTA />}
+
+    <script>
+      // Scroll-reveal — progressive enhancement only.
+      // Hardened so a section can NEVER stay stuck invisible:
+      //  - threshold 0 fires the moment any pixel enters (fixes sections taller
+      //    than the viewport, which a 12% threshold could never satisfy),
+      //  - a scroll/resize fallback reveals anything already on screen that the
+      //    observer skipped during fast/programmatic scrolling,
+      //  - a final timer guarantees everything is shown after a few seconds.
+      const revealEls = Array.from(document.querySelectorAll<HTMLElement>('.reveal'));
+      if (revealEls.length) {
+        const show = (el: Element) => el.classList.add('is-visible');
+        const pending = new Set<HTMLElement>(revealEls);
+
+        const reveal = (el: HTMLElement) => {
+          show(el);
+          pending.delete(el);
+        };
+
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (entry.isIntersecting) {
+                reveal(entry.target as HTMLElement);
+                io.unobserve(entry.target);
+              }
+            }
+          },
+          // threshold 0 = trigger as soon as the element edge enters; the slight
+          // negative bottom margin keeps the fade-in just below the fold.
+          { threshold: 0, rootMargin: '0px 0px -5% 0px' },
+        );
+        pending.forEach((el) => io.observe(el));
+
+        // Fallback: reveal anything already within (or above) the viewport that
+        // the observer missed — covers fast trackpad/touch scrolls.
+        const sweep = () => {
+          if (!pending.size) {
+            window.removeEventListener('scroll', onScroll);
+            window.removeEventListener('resize', onScroll);
+            return;
+          }
+          const vh = window.innerHeight || document.documentElement.clientHeight;
+          for (const el of Array.from(pending)) {
+            const top = el.getBoundingClientRect().top;
+            if (top < vh * 0.95) {
+              io.unobserve(el);
+              reveal(el);
+            }
+          }
+        };
+        let ticking = false;
+        const onScroll = () => {
+          if (ticking) return;
+          ticking = true;
+          requestAnimationFrame(() => {
+            ticking = false;
+            sweep();
+          });
+        };
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', onScroll, { passive: true });
+        sweep(); // reveal whatever is on screen at load
+
+        // Absolute safety net: nothing stays hidden forever.
+        window.setTimeout(() => {
+          for (const el of Array.from(pending)) {
+            io.unobserve(el);
+            reveal(el);
+          }
+        }, 2500);
+      }
+    </script>
+  </body>
+</html>

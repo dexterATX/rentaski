@@ -1,0 +1,25 @@
+# build output
+dist/
+.astro/
+
+# dependencies
+node_modules/
+
+# environment — never commit real keys
+.env
+.env.production
+.env.local
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# persisted bookings — contain customer PII, never commit
+data/
+scripts/preview/
+
+# os / editor
+.DS_Store
+*.local
+.vscode/

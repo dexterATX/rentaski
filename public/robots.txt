@@ -1,0 +1,7 @@
+# rentaSkii — crawler rules
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /booking/
+
+Sitemap: https://rentaskifl.com/sitemap-index.xml
