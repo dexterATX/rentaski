@@ -23,6 +23,13 @@ interface ImportMetaEnv {
   readonly BOOKINGS_NOTIFY_EMAIL?: string;
   /** Token guarding the /api/bookings admin view. When unset, that endpoint is disabled (404). */
   readonly ADMIN_TOKEN?: string;
+
+  /** Meta Pixel ID (public — also embedded in the browser pixel). */
+  readonly PUBLIC_META_PIXEL_ID?: string;
+  /** Meta Conversions API access token from Events Manager. Server-only. */
+  readonly META_CAPI_ACCESS_TOKEN?: string;
+  /** Optional test event code (e.g. TEST45708) — routes CAPI events to Test Events tab. */
+  readonly META_TEST_EVENT_CODE?: string;
 }
 
 interface ImportMeta {

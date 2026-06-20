@@ -4,6 +4,7 @@ import { priceBooking, PricingError } from '../../lib/pricing';
 import { getJetSki } from '../../data/jetskis';
 import { getDuration, timeSlots } from '../../data/booking';
 import { notifyPendingBooking } from '../../lib/notify';
+import { sendMetaEvent, splitName } from '../../lib/meta';
 
 // On-demand endpoint — must run on the server.
 export const prerender = false;
@@ -177,6 +178,21 @@ export const POST: APIRoute = async ({ request }) => {
     });
 
     if (!session.url) return fail('Stripe did not return a checkout link.', 502);
+
+    void sendMetaEvent({
+      eventName: 'InitiateCheckout',
+      eventId: `checkout-${session.id}`,
+      eventSourceUrl: `${origin}/book`,
+      request,
+      userData: { email: input.email, phone: input.phone, ...splitName(input.name) },
+      customData: {
+        value: priced.total,
+        currency: 'USD',
+        content_ids: [input.jetSkiId],
+        content_type: 'product',
+        num_items: 1,
+      },
+    });
 
     // Pending-order emails — sent now, before redirect. Full confirmation goes out
     // only after Stripe checkout completes (webhook / success-page fallback).
