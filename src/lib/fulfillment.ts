@@ -7,7 +7,7 @@
 import type Stripe from 'stripe';
 import { hasBooking } from './bookings';
 import { notifyBooking, type BookingDetails } from './notify';
-import { sendMetaEvent, splitName } from './meta';
+import { purchaseEventId, sendMetaEvent, splitName } from './meta';
 
 export interface FulfillmentResult {
   duplicate: boolean;
@@ -62,7 +62,7 @@ async function fulfillOnce(session: Stripe.Checkout.Session): Promise<Fulfillmen
   const result = await notifyBooking(booking);
   void sendMetaEvent({
     eventName: 'Purchase',
-    eventId: `purchase-${session.id}`,
+    eventId: purchaseEventId(session.id),
     userData: {
       email: booking.customerEmail,
       phone: booking.customerPhone,

@@ -1,0 +1,15 @@
+---
+interface Props {
+  event: string;
+  eventId: string;
+  customData?: Record<string, unknown>;
+}
+
+const { event, eventId, customData = {} } = Astro.props;
+---
+
+<script is:inline define:vars={{ event, eventId, customData }}>
+  if (typeof fbq === 'function') {
+    fbq('track', event, customData, { eventID: eventId });
+  }
+</script>

@@ -36,6 +36,29 @@ function clientIp(request: Request): string | undefined {
   return request.headers.get('x-real-ip') ?? undefined;
 }
 
+function utmFromCookies(cookies: Record<string, string>): Record<string, string> {
+  const raw = cookies.rentaskii_utm;
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(decodeURIComponent(raw)) as Record<string, string>;
+    const out: Record<string, string> = {};
+    for (const [k, v] of Object.entries(parsed)) {
+      if (typeof v === 'string' && v) out[k] = v;
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+export function checkoutEventId(sessionId: string): string {
+  return `checkout-${sessionId}`;
+}
+
+export function purchaseEventId(sessionId: string): string {
+  return `purchase-${sessionId}`;
+}
+
 export interface MetaUserData {
   email?: string;
   phone?: string;
@@ -90,9 +113,9 @@ export async function sendMetaEvent(input: MetaEventInput): Promise<MetaSendResu
     user_data: ud,
   };
   if (input.eventSourceUrl) event.event_source_url = input.eventSourceUrl;
-  if (input.customData && Object.keys(input.customData).length) {
-    event.custom_data = input.customData;
-  }
+  const utm = utmFromCookies(cookies);
+  const customData = { ...utm, ...(input.customData ?? {}) };
+  if (Object.keys(customData).length) event.custom_data = customData;
 
   const body: Record<string, unknown> = { data: [event] };
   if (TEST_EVENT_CODE) body.test_event_code = TEST_EVENT_CODE;

@@ -4,7 +4,7 @@ import { priceBooking, PricingError } from '../../lib/pricing';
 import { getJetSki } from '../../data/jetskis';
 import { getDuration, timeSlots } from '../../data/booking';
 import { notifyPendingBooking } from '../../lib/notify';
-import { sendMetaEvent, splitName } from '../../lib/meta';
+import { checkoutEventId, sendMetaEvent, splitName } from '../../lib/meta';
 
 // On-demand endpoint — must run on the server.
 export const prerender = false;
@@ -82,9 +82,9 @@ export const POST: APIRoute = async ({ request }) => {
     );
   };
 
-  const succeed = (url: string): Response => {
+  const succeed = (url: string, metaEventId?: string): Response => {
     if (wantsJson) {
-      return new Response(JSON.stringify({ url }), {
+      return new Response(JSON.stringify({ url, metaEventId }), {
         status: 200,
         headers: { 'content-type': 'application/json' },
       });
@@ -179,9 +179,10 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (!session.url) return fail('Stripe did not return a checkout link.', 502);
 
+    const metaEventId = checkoutEventId(session.id);
     void sendMetaEvent({
       eventName: 'InitiateCheckout',
-      eventId: `checkout-${session.id}`,
+      eventId: metaEventId,
       eventSourceUrl: `${origin}/book`,
       request,
       userData: { email: input.email, phone: input.phone, ...splitName(input.name) },
@@ -217,7 +218,7 @@ export const POST: APIRoute = async ({ request }) => {
       staffSent: pendingResult.staffEmail.sent,
     });
 
-    return succeed(session.url);
+    return succeed(session.url, metaEventId);
   } catch (err) {
     console.error('[rentaSkii] Stripe checkout error:', err);
     return fail('Our payment system is briefly unavailable. Please try again in a moment.', 502);

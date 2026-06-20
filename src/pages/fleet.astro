@@ -1,17 +1,32 @@
 ---
+export const prerender = false;
+
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHeader from '../components/PageHeader.astro';
 import FleetCard from '../components/FleetCard.astro';
 import Icon from '../components/Icon.astro';
+import MetaTrack from '../components/MetaTrack.astro';
 import { jetskis } from '../data/jetskis';
 import { included } from '../data/booking';
 import { site } from '../data/site';
 import { usd } from '../lib/format';
+import { metaCapiEnabled, sendMetaEvent } from '../lib/meta';
 
 const categoryOrder = ['Recreation', 'Cruiser', 'Sport', 'Luxury', 'Performance'];
 const categories = categoryOrder
   .map((name) => ({ name, count: jetskis.filter((j) => j.category === name).length }))
   .filter((c) => c.count > 0);
+
+const viewEventId = crypto.randomUUID();
+if (metaCapiEnabled() && Astro.request.headers.get('user-agent')) {
+  void sendMetaEvent({
+    eventName: 'ViewContent',
+    eventId: viewEventId,
+    eventSourceUrl: Astro.url.href,
+    request: Astro.request,
+    customData: { content_name: 'Fleet', content_category: 'jetski' },
+  });
+}
 
 const sortOptions = [
   { value: 'featured', label: 'Featured' },
@@ -26,6 +41,13 @@ const sortOptions = [
   title="The Fleet"
   description="Rent Sea-Doo jet skis across the Florida Gulf Coast — recreation and sport models. Check the specs and book your ride."
 >
+  <MetaTrack
+    slot="head"
+    event="ViewContent"
+    eventId={viewEventId}
+    customData={{ content_name: 'Fleet', content_category: 'jetski' }}
+  />
+
   <PageHeader
     eyebrow="Our fleet"
     title="Pick your ski"

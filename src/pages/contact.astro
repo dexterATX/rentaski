@@ -71,6 +71,15 @@ const faqSchema = {
 
   <section class="section">
     <div class="container">
+      <script is:inline>
+        document.querySelectorAll('.method-link, .info-card a.btn').forEach((link) => {
+          link.addEventListener('click', () => {
+            if (typeof fbq !== 'function') return;
+            const eventId = crypto.randomUUID();
+            fbq('track', 'Lead', { content_name: link.textContent?.trim() || 'Contact' }, { eventID: eventId });
+          });
+        });
+      </script>
       <div class="methods">
         {
           methods.map((m, i) => (

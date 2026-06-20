@@ -1,17 +1,32 @@
 ---
+export const prerender = false;
+
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHeader from '../components/PageHeader.astro';
 import Icon from '../components/Icon.astro';
 import DatePicker from '../components/DatePicker.astro';
+import MetaTrack from '../components/MetaTrack.astro';
 import { jetskis } from '../data/jetskis';
 import { addons } from '../data/addons';
 import { durations, timeSlots } from '../data/booking';
 import { pricingData } from '../lib/pricing';
 import { usd } from '../lib/format';
 import { site } from '../data/site';
+import { metaCapiEnabled, sendMetaEvent } from '../lib/meta';
+
 const bookingData = JSON.stringify(pricingData());
 const today = new Date().toISOString().slice(0, 10);
 const maxCapacity = Math.max(...jetskis.map((j) => j.capacity));
+const viewEventId = crypto.randomUUID();
+if (metaCapiEnabled() && Astro.request.headers.get('user-agent')) {
+  void sendMetaEvent({
+    eventName: 'ViewContent',
+    eventId: viewEventId,
+    eventSourceUrl: Astro.url.href,
+    request: Astro.request,
+    customData: { content_name: 'Book a Ride', content_category: 'booking' },
+  });
+}
 ---
 
 <BaseLayout
@@ -20,6 +35,13 @@ const maxCapacity = Math.max(...jetskis.map((j) => j.capacity));
   noindex={true}
   hideMobileCta={true}
 >
+  <MetaTrack
+    slot="head"
+    event="ViewContent"
+    eventId={viewEventId}
+    customData={{ content_name: 'Book a Ride', content_category: 'booking' }}
+  />
+
   <PageHeader
     eyebrow="Reserve your ride"
     title="Book your jet ski"
@@ -450,6 +472,14 @@ const maxCapacity = Math.max(...jetskis.map((j) => j.capacity));
           });
           const result = await res.json();
           if (res.ok && result.url) {
+            if (typeof fbq === 'function' && result.metaEventId) {
+              fbq(
+                'track',
+                'InitiateCheckout',
+                { content_name: 'Jet ski booking' },
+                { eventID: result.metaEventId },
+              );
+            }
             window.location.href = result.url;
             return;
           }

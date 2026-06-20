@@ -7,6 +7,8 @@ import { site } from '../../data/site';
 import { usd, longDate } from '../../lib/format';
 import { stripe } from '../../lib/stripe';
 import { fulfillPaidCheckoutSession } from '../../lib/fulfillment';
+import MetaTrack from '../../components/MetaTrack.astro';
+import { purchaseEventId } from '../../lib/meta';
 
 const params = Astro.url.searchParams;
 const sessionId = params.get('session_id');
@@ -70,6 +72,8 @@ const details: { label: string; value: string }[] = booking
     ].filter((d): d is { label: string; value: string } => Boolean(d.value))
   : [];
 
+const purchaseMetaEventId = sessionId ? purchaseEventId(sessionId) : '';
+
 const arrivalNotes = [
   "We'll text you a 30-minute delivery window the morning of your ride.",
   'Have a government-issued photo ID and the card used to book ready for our crew.',
@@ -79,6 +83,22 @@ const arrivalNotes = [
 ---
 
 <BaseLayout title={booking ? "You're booked" : 'Booking'} noindex={true}>
+  {
+    booking && purchaseMetaEventId && (
+      <MetaTrack
+        slot="head"
+        event="Purchase"
+        eventId={purchaseMetaEventId}
+        customData={{
+          value: booking.total,
+          currency: 'USD',
+          order_id: booking.ref,
+          content_type: 'product',
+        }}
+      />
+    )
+  }
+
   <section class="result">
     <div class="container container-narrow">
       {
