@@ -6,7 +6,7 @@
 
 import { createHash } from 'node:crypto';
 
-const PIXEL_ID = import.meta.env.PUBLIC_META_PIXEL_ID ?? '1521865675984357';
+const PIXEL_ID = import.meta.env.PUBLIC_META_PIXEL_ID ?? '2436825083456341';
 const ACCESS_TOKEN = import.meta.env.META_CAPI_ACCESS_TOKEN;
 const TEST_EVENT_CODE = import.meta.env.META_TEST_EVENT_CODE;
 

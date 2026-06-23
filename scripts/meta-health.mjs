@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const site = process.argv[2] ?? 'https://rentaskifl.com';
-const pixel = process.env.PUBLIC_META_PIXEL_ID ?? '1521865675984357';
+const pixel = process.env.PUBLIC_META_PIXEL_ID ?? '2436825083456341';
 
 function loadEnv() {
   const path = resolve(root, '.env');
