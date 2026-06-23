@@ -152,6 +152,27 @@ export const POST: APIRoute = async ({ request }) => {
     addons: addonLabels || 'None',
   };
 
+  // Capture Meta match keys from the customer's browser now, and stash them on
+  // the Stripe session. The Purchase event fires later from the webhook, whose
+  // request belongs to Stripe — without these the server Purchase has no
+  // fbc/fbp/IP/UA and weak Event Match Quality when the browser pixel is blocked.
+  const cookieHeader = request.headers.get('cookie') ?? '';
+  const readCookie = (name: string): string => {
+    const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`));
+    return match ? decodeURIComponent(match[1]) : '';
+  };
+  const fbc = readCookie('_fbc');
+  const fbp = readCookie('_fbp');
+  const clientIp =
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    request.headers.get('x-real-ip') ||
+    '';
+  const clientUserAgent = request.headers.get('user-agent') ?? '';
+  if (fbc) metadata.fbc = fbc;
+  if (fbp) metadata.fbp = fbp;
+  if (clientIp) metadata.client_ip = clientIp;
+  if (clientUserAgent) metadata.client_ua = clientUserAgent.slice(0, 480);
+
   // --- Stripe Checkout — fail loudly if the server is misconfigured -------
   if (!stripe) {
     console.error('[rentaSkii] /api/checkout called but STRIPE_SECRET_KEY is not set.');

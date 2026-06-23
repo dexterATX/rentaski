@@ -60,13 +60,24 @@ async function fulfillOnce(session: Stripe.Checkout.Session): Promise<Fulfillmen
   });
 
   const result = await notifyBooking(booking);
+  // Replay the customer's browser identifiers captured at checkout so this
+  // server-side Purchase keeps strong Event Match Quality even though it fires
+  // from the Stripe webhook. Deduplicates against the browser pixel Purchase on
+  // /booking/success via the shared purchaseEventId(session.id).
+  const meta = session.metadata ?? {};
+  const siteUrl = import.meta.env.PUBLIC_SITE_URL ?? 'https://rentaskifl.com';
   void sendMetaEvent({
     eventName: 'Purchase',
     eventId: purchaseEventId(session.id),
+    eventSourceUrl: `${siteUrl}/booking/success`,
     userData: {
       email: booking.customerEmail,
       phone: booking.customerPhone,
       ...splitName(booking.customerName),
+      fbc: meta.fbc || undefined,
+      fbp: meta.fbp || undefined,
+      clientIpAddress: meta.client_ip || undefined,
+      clientUserAgent: meta.client_ua || undefined,
     },
     customData: {
       value: booking.total,

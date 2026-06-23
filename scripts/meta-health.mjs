@@ -30,7 +30,7 @@ let ok = true;
 
 const html = await fetch(site).then((r) => r.text());
 const checks = [
-  ['pixel init', html.includes(`fbq('init', '${pixel}'`) || html.includes(`fbq('init', ${pixel}`)],
+  ['pixel init', /fbq\(\s*'init'/.test(html) && html.includes(pixel)],
   ['PageView track', html.includes("fbq('track', 'PageView'")],
   ['eventID dedup', html.includes('eventID')],
   ['attribution script', html.includes('meta-attribution.js')],

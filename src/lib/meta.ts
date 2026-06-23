@@ -64,6 +64,16 @@ export interface MetaUserData {
   phone?: string;
   firstName?: string;
   lastName?: string;
+  /**
+   * Identifiers captured from the customer's browser at checkout and replayed
+   * on events fired later without a live browser request (the Stripe webhook
+   * Purchase). When set they take precedence over anything derived from
+   * `request`, which for a webhook would be Stripe's IP/UA, not the customer's.
+   */
+  fbc?: string;
+  fbp?: string;
+  clientIpAddress?: string;
+  clientUserAgent?: string;
 }
 
 export interface MetaEventInput {
@@ -104,6 +114,13 @@ export async function sendMetaEvent(input: MetaEventInput): Promise<MetaSendResu
   if (u?.phone) ud.ph = sha256(u.phone.replace(/\D/g, ''));
   if (u?.firstName) ud.fn = sha256(u.firstName);
   if (u?.lastName) ud.ln = sha256(u.lastName);
+
+  // Explicit identifiers win over request-derived ones (used by the webhook
+  // Purchase, where `request` belongs to Stripe rather than the customer).
+  if (u?.fbc) ud.fbc = u.fbc;
+  if (u?.fbp) ud.fbp = u.fbp;
+  if (u?.clientIpAddress) ud.client_ip_address = u.clientIpAddress;
+  if (u?.clientUserAgent) ud.client_user_agent = u.clientUserAgent;
 
   const event: Record<string, unknown> = {
     event_name: input.eventName,
