@@ -74,9 +74,28 @@ const faqSchema = {
       <script is:inline>
         document.querySelectorAll('.method-link, .info-card a.btn').forEach((link) => {
           link.addEventListener('click', () => {
-            if (typeof fbq !== 'function') return;
+            const href = link.getAttribute('href') || '';
+            // Phone/SMS/email taps are a Contact; links into the funnel are a Lead.
+            const isContact = href.startsWith('tel:') || href.startsWith('mailto:');
+            const event = isContact ? 'Contact' : 'Lead';
             const eventId = crypto.randomUUID();
-            fbq('track', 'Lead', { content_name: link.textContent?.trim() || 'Contact' }, { eventID: eventId });
+            const contentName = link.textContent?.trim() || event;
+            if (typeof fbq === 'function') {
+              fbq('track', event, { content_name: contentName }, { eventID: eventId });
+            }
+            // Mirror to the Conversions API with the same eventID so Meta
+            // deduplicates against the pixel hit above.
+            try {
+              const payload = JSON.stringify({
+                event,
+                eventId,
+                contentName,
+                sourceUrl: location.href,
+              });
+              navigator.sendBeacon('/api/track', new Blob([payload], { type: 'application/json' }));
+            } catch (_) {
+              /* telemetry is best-effort */
+            }
           });
         });
       </script>
