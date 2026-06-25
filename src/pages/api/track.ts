@@ -14,7 +14,7 @@ import { metaCapiEnabled, sendMetaEvent } from '../../lib/meta';
 // also beacon here, or Meta will receive two server events per page load.
 export const prerender = false;
 
-const ALLOWED_EVENTS = new Set(['Contact', 'Lead', 'PageView']);
+const ALLOWED_EVENTS = new Set(['Contact', 'Lead', 'PageView', 'AddToCart', 'CustomizeProduct']);
 
 export const POST: APIRoute = async ({ request }) => {
   // Always answer 204 — this is fire-and-forget telemetry, never user-facing.
@@ -48,12 +48,26 @@ export const POST: APIRoute = async ({ request }) => {
       ? body.sourceUrl
       : (request.headers.get('referer') ?? undefined);
 
+  // Accept a small customData object from the beacon (value, currency, content_ids,
+  // etc.) for events like AddToCart. Shallow-validated: string/number values only,
+  // capped total size so a caller can't bloat the CAPI payload.
+  const customData: Record<string, string | number> = {};
+  if (contentName) customData.content_name = contentName;
+  const incoming = body.customData;
+  if (incoming && typeof incoming === 'object' && !Array.isArray(incoming)) {
+    for (const [k, v] of Object.entries(incoming as Record<string, unknown>)) {
+      if (typeof v === 'string' || typeof v === 'number') {
+        customData[String(k).slice(0, 60)] = typeof v === 'string' ? v.slice(0, 200) : v;
+      }
+    }
+  }
+
   void sendMetaEvent({
     eventName: event,
     eventId,
     eventSourceUrl: sourceUrl,
     request,
-    customData: contentName ? { content_name: contentName } : undefined,
+    customData: Object.keys(customData).length ? customData : undefined,
   });
 
   return noContent();

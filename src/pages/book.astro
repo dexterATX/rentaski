@@ -335,6 +335,26 @@ if (metaCapiEnabled() && Astro.request.headers.get('user-agent')) {
       const selectedAddons = () =>
         [...form.querySelectorAll('input[name="addons"]:checked')].map((c) => c.value);
 
+      // Fire a Meta event from the browser pixel and mirror it to the CAPI relay
+      // (/api/track) with the same eventID so Meta deduplicates. Fire-and-forget.
+      const lastTracked = { ski: null, duration: null };
+      function trackSelect(event, customData) {
+        try {
+          const eventId = crypto.randomUUID();
+          if (typeof fbq === 'function') {
+            fbq('track', event, customData, { eventID: eventId });
+          }
+          navigator.sendBeacon(
+            '/api/track',
+            new Blob([JSON.stringify({ event, eventId, sourceUrl: location.href, customData })], {
+              type: 'application/json',
+            }),
+          );
+        } catch (_) {
+          /* telemetry is best-effort */
+        }
+      }
+
       function render() {
         const ski = selectedSki();
         const dur = selectedDuration();
@@ -434,6 +454,35 @@ if (metaCapiEnabled() && Astro.request.headers.get('user-agent')) {
       form.addEventListener('change', render);
       form.addEventListener('input', render);
       render();
+
+      // Track jet ski selection → AddToCart, and duration package selection →
+      // CustomizeProduct. Fires once per actual selection (not on every render).
+      form.querySelectorAll('input[name="jetSkiId"]').forEach((radio) => {
+        radio.addEventListener('change', () => {
+          const ski = selectedSki();
+          if (!ski) return;
+          trackSelect('AddToCart', {
+            content_ids: [ski.id],
+            content_name: ski.name,
+            content_type: 'product',
+            value: ski.rates.hourly,
+            currency: 'USD',
+          });
+        });
+      });
+      form.querySelectorAll('input[name="duration"]').forEach((radio) => {
+        radio.addEventListener('change', () => {
+          const ski = selectedSki();
+          const dur = selectedDuration();
+          if (!dur) return;
+          trackSelect('CustomizeProduct', {
+            content_name: dur.label,
+            content_category: 'rental duration',
+            value: ski ? ski.rates[dur.rateKey] : 0,
+            currency: 'USD',
+          });
+        });
+      });
 
       // submit → Stripe Checkout (graceful: works without JS via a plain POST)
       form.addEventListener('submit', async (event) => {
