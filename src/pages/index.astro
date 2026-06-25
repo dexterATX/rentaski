@@ -132,17 +132,52 @@ const experiences: {
 ---
 
 <BaseLayout>
+  {/* Preload the hero LCP image. Mobile renders the <video> poster (the <img>
+      is display:none below 768px), so preload the small poster there; desktop
+      preloads the WebP that the <picture> will actually use. */}
+  <link
+    slot="head"
+    rel="preload"
+    as="image"
+    href="/photos/hero-ride-800.jpg"
+    media="(max-width: 768px)"
+    fetchpriority="high"
+  />
+  <link
+    slot="head"
+    rel="preload"
+    as="image"
+    href="/photos/hero-ride-1920.webp"
+    media="(min-width: 769px)"
+    type="image/webp"
+    fetchpriority="high"
+  />
+
   {/* ---------- HERO ---------- */}
   <section class="hero">
-    <img
-      class="hero-bg hero-bg-image"
-      src="/photos/hero-ride.jpg"
-      alt="A rider carving across the open Gulf on a jet ski"
-      width="1920"
-      height="1080"
-      fetchpriority="high"
-      decoding="async"
-    />
+    <picture>
+      <source
+        type="image/webp"
+        srcset="/photos/hero-ride-480.webp 480w,
+                /photos/hero-ride-800.webp 800w,
+                /photos/hero-ride-1200.webp 1200w,
+                /photos/hero-ride-1600.webp 1600w,
+                /photos/hero-ride-1920.webp 1920w"
+        sizes="100vw"
+      />
+      <img
+        class="hero-bg hero-bg-image"
+        src="/photos/hero-ride-1920.jpg"
+        srcset="/photos/hero-ride-800.jpg 800w,
+                /photos/hero-ride-1920.jpg 1920w"
+        sizes="100vw"
+        alt="A rider carving across the open Gulf on a jet ski"
+        width="1920"
+        height="1080"
+        fetchpriority="high"
+        decoding="async"
+      />
+    </picture>
     <video
       class="hero-bg hero-bg-video"
       autoplay
@@ -150,7 +185,7 @@ const experiences: {
       loop
       playsinline
       preload="metadata"
-      poster="/photos/hero-ride.jpg"
+      poster="/photos/hero-ride-800.jpg"
       aria-hidden="true"
     >
       <source src="/videos/hero-mobile.mp4" type="video/mp4" />
