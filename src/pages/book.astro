@@ -336,20 +336,16 @@ if (metaCapiEnabled() && Astro.request.headers.get('user-agent')) {
         [...form.querySelectorAll('input[name="addons"]:checked')].map((c) => c.value);
 
       // Fire a Meta event from the browser pixel and mirror it to the CAPI relay
-      // (/api/track) with the same eventID so Meta deduplicates. Fire-and-forget.
-      const lastTracked = { ski: null, duration: null };
+      // via window.metaBeacon (reads _fbp/_fbc from cookies). Fire-and-forget.
       function trackSelect(event, customData) {
         try {
           const eventId = crypto.randomUUID();
           if (typeof fbq === 'function') {
             fbq('track', event, customData, { eventID: eventId });
           }
-          navigator.sendBeacon(
-            '/api/track',
-            new Blob([JSON.stringify({ event, eventId, sourceUrl: location.href, customData })], {
-              type: 'application/json',
-            }),
-          );
+          if (typeof window.metaBeacon === 'function') {
+            window.metaBeacon(event, eventId, customData);
+          }
         } catch (_) {
           /* telemetry is best-effort */
         }

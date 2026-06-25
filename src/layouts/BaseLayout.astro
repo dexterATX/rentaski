@@ -83,6 +83,36 @@ const businessSchema = {
     <link rel="sitemap" href="/sitemap-index.xml" />
     <script src="/meta-attribution.js" defer></script>
 
+    // Shared browser-side Meta beacon helper. Reads _fbp/_fbc/rentaskii_vid
+    // from cookies so the CAPI relay gets the same browser identifiers the
+    // pixel uses, even on prerendered pages where the server never sees the
+    // live request. Exposed globally as window.metaBeacon.
+    <script is:inline>
+      (function () {
+        function readCookie(name) {
+          var m = document.cookie.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]+)'));
+          return m ? decodeURIComponent(m[1]) : '';
+        }
+        window.metaBeacon = function (event, eventId, customData) {
+          try {
+            var payload = {
+              event: event,
+              eventId: eventId,
+              sourceUrl: location.href,
+              customData: customData || {},
+              fbp: readCookie('_fbp'),
+              fbc: readCookie('_fbc'),
+              externalId: readCookie('rentaskii_vid'),
+            };
+            navigator.sendBeacon(
+              '/api/track',
+              new Blob([JSON.stringify(payload)], { type: 'application/json' }),
+            );
+          } catch (_) { /* telemetry is best-effort */ }
+        };
+      })();
+    </script>
+
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
@@ -126,14 +156,8 @@ const businessSchema = {
       // server couldn't send a CAPI PageView. Relay one now with the same
       // eventID so Meta deduplicates against this pixel hit. SSR pages skip
       // this — the server already sent the CAPI event.
-      if (!sentCapiPageView) {
-        try {
-          navigator.sendBeacon('/api/track', new Blob([JSON.stringify({
-            event: 'PageView',
-            eventId: metaEventId,
-            sourceUrl: location.href
-          })], { type: 'application/json' }));
-        } catch (_) { /* telemetry is best-effort */ }
+      if (!sentCapiPageView && typeof window.metaBeacon === 'function') {
+        window.metaBeacon('PageView', metaEventId, {});
       }
     </script>
     <noscript><img height="1" width="1" style="display:none"

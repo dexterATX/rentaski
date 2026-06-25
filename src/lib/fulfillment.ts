@@ -76,6 +76,7 @@ async function fulfillOnce(session: Stripe.Checkout.Session): Promise<Fulfillmen
       ...splitName(booking.customerName),
       fbc: meta.fbc || undefined,
       fbp: meta.fbp || undefined,
+      externalId: meta.external_id || undefined,
       clientIpAddress: meta.client_ip || undefined,
       clientUserAgent: meta.client_ua || undefined,
     },

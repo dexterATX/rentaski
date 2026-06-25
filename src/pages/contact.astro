@@ -92,18 +92,10 @@ const faqSchema = {
             if (typeof fbq === 'function') {
               fbq('track', event, { content_name: contentName }, { eventID: eventId });
             }
-            // Mirror to the Conversions API with the same eventID so Meta
-            // deduplicates against the pixel hit above.
-            try {
-              const payload = JSON.stringify({
-                event,
-                eventId,
-                contentName,
-                sourceUrl: location.href,
-              });
-              navigator.sendBeacon('/api/track', new Blob([payload], { type: 'application/json' }));
-            } catch (_) {
-              /* telemetry is best-effort */
+            // Mirror to CAPI with the same eventID; metaBeacon includes
+            // _fbp/_fbc from cookies for match quality.
+            if (typeof window.metaBeacon === 'function') {
+              window.metaBeacon(event, eventId, { content_name: contentName });
             }
           });
         });

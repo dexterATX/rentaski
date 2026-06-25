@@ -74,6 +74,12 @@ export interface MetaUserData {
   fbp?: string;
   clientIpAddress?: string;
   clientUserAgent?: string;
+  /**
+   * Stable first-party visitor ID (rentaskii_vid cookie), hashed and sent as
+   * external_id so Meta can match events across visits even when _fbp is not
+   * yet set or available. Improves match quality per Meta's recommendation.
+   */
+  externalId?: string;
 }
 
 export interface MetaEventInput {
@@ -121,6 +127,9 @@ export async function sendMetaEvent(input: MetaEventInput): Promise<MetaSendResu
   if (u?.fbp) ud.fbp = u.fbp;
   if (u?.clientIpAddress) ud.client_ip_address = u.clientIpAddress;
   if (u?.clientUserAgent) ud.client_user_agent = u.clientUserAgent;
+  // external_id is hashed (SHA-256) per Meta's user_data formatting spec —
+  // it's a stable first-party visitor ID, not a raw Meta identifier.
+  if (u?.externalId) ud.external_id = sha256(u.externalId);
 
   const event: Record<string, unknown> = {
     event_name: input.eventName,

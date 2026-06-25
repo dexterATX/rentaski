@@ -163,6 +163,7 @@ export const POST: APIRoute = async ({ request }) => {
   };
   const fbc = readCookie('_fbc');
   const fbp = readCookie('_fbp');
+  const externalId = readCookie('rentaskii_vid');
   const clientIp =
     request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
     request.headers.get('x-real-ip') ||
@@ -170,6 +171,7 @@ export const POST: APIRoute = async ({ request }) => {
   const clientUserAgent = request.headers.get('user-agent') ?? '';
   if (fbc) metadata.fbc = fbc;
   if (fbp) metadata.fbp = fbp;
+  if (externalId) metadata.external_id = externalId;
   if (clientIp) metadata.client_ip = clientIp;
   if (clientUserAgent) metadata.client_ua = clientUserAgent.slice(0, 480);
 

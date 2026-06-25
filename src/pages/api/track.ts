@@ -62,12 +62,21 @@ export const POST: APIRoute = async ({ request }) => {
     }
   }
 
+  // Accept fbp/fbc/externalId from the beacon body (read in browser JS from
+  // cookies) so the CAPI event carries the browser identifiers even if the
+  // relay request's own cookie header is missing them. Passed as explicit
+  // userData so they override any request-derived values in sendMetaEvent.
+  const fbp = typeof body.fbp === 'string' ? body.fbp.slice(0, 80) : undefined;
+  const fbc = typeof body.fbc === 'string' ? body.fbc.slice(0, 80) : undefined;
+  const externalId = typeof body.externalId === 'string' ? body.externalId.slice(0, 80) : undefined;
+
   void sendMetaEvent({
     eventName: event,
     eventId,
     eventSourceUrl: sourceUrl,
     request,
     customData: Object.keys(customData).length ? customData : undefined,
+    userData: { fbp, fbc, externalId },
   });
 
   return noContent();
