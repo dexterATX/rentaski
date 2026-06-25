@@ -83,11 +83,11 @@ const businessSchema = {
     <link rel="sitemap" href="/sitemap-index.xml" />
     <script src="/meta-attribution.js" defer></script>
 
-    // Shared browser-side Meta beacon helper. Reads _fbp/_fbc/rentaskii_vid
-    // from cookies so the CAPI relay gets the same browser identifiers the
-    // pixel uses, even on prerendered pages where the server never sees the
-    // live request. Exposed globally as window.metaBeacon.
     <script is:inline>
+      // Shared browser-side Meta beacon helper. Reads _fbp/_fbc/rentaskii_vid
+      // from cookies so the CAPI relay gets the same browser identifiers the
+      // pixel uses, even on prerendered pages where the server never sees the
+      // live request. Exposed globally as window.metaBeacon.
       (function () {
         function readCookie(name) {
           var m = document.cookie.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]+)'));
