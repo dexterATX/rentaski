@@ -180,11 +180,10 @@ const experiences: {
     </picture>
     <video
       class="hero-bg hero-bg-video"
-      autoplay
       muted
       loop
       playsinline
-      preload="metadata"
+      preload="none"
       poster="/photos/hero-ride-800.jpg"
       aria-hidden="true"
     >
@@ -563,7 +562,11 @@ const experiences: {
     if (heroVideo) {
       const tryPlay = () => {
         if (window.matchMedia('(max-width: 768px)').matches) {
-          heroVideo.play().catch(() => {});
+          // Defer until idle so the poster (LCP) paints before the video
+          // starts fetching, and the hero image stays the largest element.
+          (window.requestIdleCallback || ((cb) => setTimeout(cb, 200)))(() => {
+            heroVideo.play().catch(() => {});
+          });
         }
       };
       tryPlay();
