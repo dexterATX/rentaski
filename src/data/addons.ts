@@ -10,6 +10,8 @@ export interface Addon {
   price: number;
   description: string;
   icon: IconName;
+  /** Optional photo in /public/photos — falls back to the icon when unset. */
+  image?: string;
 }
 
 export const addons: Addon[] = [
@@ -19,6 +21,7 @@ export const addons: Addon[] = [
     price: 39,
     description: 'Mount-and-go action camera so you keep both hands on the bars.',
     icon: 'camera',
+    image: '/photos/addon-gopro.webp',
   },
   {
     id: 'dolphin-tour',
@@ -26,6 +29,7 @@ export const addons: Addon[] = [
     price: 89,
     description: 'A local captain leads you straight to the dolphins and the best sandbar.',
     icon: 'map',
+    image: '/photos/addon-dolphin-tour.webp',
   },
   {
     id: 'fuel',
@@ -33,6 +37,7 @@ export const addons: Addon[] = [
     price: 49,
     description: 'Skip the gas stop. Return the ski at any fuel level, no questions.',
     icon: 'fuel',
+    image: '/photos/addon-fuel.webp',
   },
   {
     id: 'cooler',
@@ -40,6 +45,7 @@ export const addons: Addon[] = [
     price: 25,
     description: 'A secured cooler with ice, room for twelve, keeps the drinks cold.',
     icon: 'cooler',
+    image: '/photos/addon-cooler.webp',
   },
   {
     id: 'comfort-pack',
@@ -47,6 +53,7 @@ export const addons: Addon[] = [
     price: 19,
     description: 'Extra life vests, a dry bag, and a waterproof phone case.',
     icon: 'shield',
+    image: '/photos/addon-comfort-pack.webp',
   },
 ];
 

@@ -199,7 +199,20 @@ if (metaCapiEnabled() && Astro.request.headers.get('user-agent')) {
                   <label class="opt addon-opt">
                     <input type="checkbox" name="addons" value={a.id} />
                     <span class="opt-body addon-body">
-                      <span class="addon-icon"><Icon name={a.icon} size="1.25rem" /></span>
+                      {a.image ? (
+                        <span class="addon-photo">
+                          <img
+                            src={a.image}
+                            alt={a.name}
+                            width="120"
+                            height="74"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        </span>
+                      ) : (
+                        <span class="addon-icon"><Icon name={a.icon} size="1.25rem" /></span>
+                      )}
                       <span class="addon-info">
                         <span class="addon-name">{a.name}</span>
                         <span class="addon-desc">{a.description}</span>
@@ -861,6 +874,24 @@ if (metaCapiEnabled() && Astro.request.headers.get('user-agent')) {
   .addon-opt:has(input:checked) .addon-icon {
     background: var(--grad-teal);
     color: #04212a;
+  }
+  .addon-photo {
+    flex-shrink: 0;
+    width: 5.4rem;
+    height: 3.4rem;
+    border-radius: var(--r-sm);
+    overflow: hidden;
+    border: 1px solid var(--line-2);
+    transition: border-color var(--t), box-shadow var(--t);
+  }
+  .addon-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .addon-opt:has(input:checked) .addon-photo {
+    border-color: var(--teal);
+    box-shadow: 0 0 0 1px var(--teal);
   }
   .addon-info {
     flex: 1;
