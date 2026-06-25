@@ -181,7 +181,15 @@ export const POST: APIRoute = async ({ request }) => {
 
 
   try {
-    const origin = new URL(request.url).origin;
+    // Prefer the configured PUBLIC_SITE_URL so success/cancel URLs are the
+    // public origin even behind a reverse proxy that doesn't forward the
+    // original Host/Proto (Caddy → 127.0.0.1:4321 made request.url resolve to
+    // http://localhost:4321, breaking Stripe's back-redirect). Fall back to the
+    // request origin for local dev where PUBLIC_SITE_URL is unset.
+    const publicUrl = import.meta.env.PUBLIC_SITE_URL;
+    const origin = publicUrl
+      ? new URL(publicUrl).origin.replace(/\/$/, '')
+      : new URL(request.url).origin;
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       customer_email: input.email,
