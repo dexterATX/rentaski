@@ -33,7 +33,8 @@ const ogImage = new URL(image, base).href;
 
 const metaEventId = crypto.randomUUID();
 const hasLiveRequest = Boolean(Astro.request.headers.get('user-agent'));
-if (metaCapiEnabled() && hasLiveRequest) {
+const sentCapiPageView = metaCapiEnabled() && hasLiveRequest;
+if (sentCapiPageView) {
   void sendMetaEvent({
     eventName: 'PageView',
     eventId: metaEventId,
@@ -108,7 +109,7 @@ const businessSchema = {
     <slot name="head" />
 
     <!-- Meta Pixel Code -->
-    <script is:inline define:vars={{ metaPixelId, metaEventId }}>
+    <script is:inline define:vars={{ metaPixelId, metaEventId, sentCapiPageView }}>
       !function (f, b, e, v, n, t, s) {
         if (f.fbq) return; n = f.fbq = function () {
           n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments)
@@ -121,6 +122,19 @@ const businessSchema = {
         'https://connect.facebook.net/en_US/fbevents.js');
       fbq('init', metaPixelId);
       fbq('track', 'PageView', {}, { eventID: metaEventId });
+      // Static (prerendered) pages had no live request at render time, so the
+      // server couldn't send a CAPI PageView. Relay one now with the same
+      // eventID so Meta deduplicates against this pixel hit. SSR pages skip
+      // this — the server already sent the CAPI event.
+      if (!sentCapiPageView) {
+        try {
+          navigator.sendBeacon('/api/track', new Blob([JSON.stringify({
+            event: 'PageView',
+            eventId: metaEventId,
+            sourceUrl: location.href
+          })], { type: 'application/json' }));
+        } catch (_) { /* telemetry is best-effort */ }
+      }
     </script>
     <noscript><img height="1" width="1" style="display:none"
         src={`https://www.facebook.com/tr?id=${metaPixelId}&ev=PageView&noscript=1`} /></noscript>
