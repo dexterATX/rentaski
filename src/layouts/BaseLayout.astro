@@ -6,7 +6,7 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import MobileCTA from '../components/MobileCTA.astro';
 import { site } from '../data/site';
-import { metaCapiEnabled, metaPixelId, sendMetaEvent } from '../lib/meta';
+import { metaCapiEnabled, metaPixelId, publicEventUrl, sendMetaEvent } from '../lib/meta';
 
 interface Props {
   title?: string;
@@ -38,7 +38,7 @@ if (sentCapiPageView) {
   void sendMetaEvent({
     eventName: 'PageView',
     eventId: metaEventId,
-    eventSourceUrl: Astro.url.href,
+    eventSourceUrl: publicEventUrl(Astro.url.pathname, Astro.url.search),
     request: Astro.request,
   });
 }

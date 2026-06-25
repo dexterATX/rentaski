@@ -12,7 +12,7 @@ import { durations, timeSlots } from '../data/booking';
 import { pricingData } from '../lib/pricing';
 import { usd } from '../lib/format';
 import { site } from '../data/site';
-import { metaCapiEnabled, sendMetaEvent } from '../lib/meta';
+import { metaCapiEnabled, publicEventUrl, sendMetaEvent } from '../lib/meta';
 
 const bookingData = JSON.stringify(pricingData());
 const today = new Date().toISOString().slice(0, 10);
@@ -22,7 +22,7 @@ if (metaCapiEnabled() && Astro.request.headers.get('user-agent')) {
   void sendMetaEvent({
     eventName: 'ViewContent',
     eventId: viewEventId,
-    eventSourceUrl: Astro.url.href,
+    eventSourceUrl: publicEventUrl(Astro.url.pathname, Astro.url.search),
     request: Astro.request,
     customData: { content_name: 'Book a Ride', content_category: 'booking' },
   });

@@ -21,6 +21,19 @@ export function metaCapiEnabled(): boolean {
   return Boolean(ACCESS_TOKEN && PIXEL_ID);
 }
 
+/**
+ * Build the public event_source_url for a CAPI event. Behind a reverse proxy
+ * (Caddy → 127.0.0.1:4321), Astro.url.href resolves to the loopback origin,
+ * not the public URL — so Meta would receive http://127.0.0.1:4321/fleet and
+ * either drop it or collapse all events to one URL. Derive the origin from
+ * PUBLIC_SITE_URL and keep only the pathname/search from the request.
+ */
+export function publicEventUrl(pathname: string, search = ''): string {
+  const base = import.meta.env.PUBLIC_SITE_URL ?? 'https://rentaskifl.com';
+  const cleanPath = pathname.startsWith('/') ? pathname : `/${pathname}`;
+  return `${base.replace(/\/$/, '')}${cleanPath}${search}`;
+}
+
 // One ParamBuilder per domain — it computes eTLD+1 from the host so fbc/fbp
 // are formatted with the correct subdomain index. rentaSkii serves a single
 // domain, so a shared instance is fine.

@@ -10,7 +10,7 @@ import { jetskis } from '../data/jetskis';
 import { included } from '../data/booking';
 import { site } from '../data/site';
 import { usd } from '../lib/format';
-import { metaCapiEnabled, sendMetaEvent } from '../lib/meta';
+import { metaCapiEnabled, publicEventUrl, sendMetaEvent } from '../lib/meta';
 
 const categoryOrder = ['Recreation', 'Cruiser', 'Sport', 'Luxury', 'Performance'];
 const categories = categoryOrder
@@ -22,7 +22,7 @@ if (metaCapiEnabled() && Astro.request.headers.get('user-agent')) {
   void sendMetaEvent({
     eventName: 'ViewContent',
     eventId: viewEventId,
-    eventSourceUrl: Astro.url.href,
+    eventSourceUrl: publicEventUrl(Astro.url.pathname, Astro.url.search),
     request: Astro.request,
     customData: { content_name: 'Fleet', content_category: 'jetski' },
   });
