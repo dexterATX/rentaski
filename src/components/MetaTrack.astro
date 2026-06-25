@@ -12,4 +12,18 @@ const { event, eventId, customData = {} } = Astro.props;
   if (typeof fbq === 'function') {
     fbq('track', event, customData, { eventID: eventId });
   }
+  // Mirror to the Conversions API via /api/track with the same eventID so Meta
+  // deduplicates against the pixel hit. On SSR pages the server may also send
+  // a CAPI event with this same eventID — Meta dedups those too, so beaming
+  // here is always safe and is the only CAPI path for prerendered pages.
+  try {
+    navigator.sendBeacon(
+      '/api/track',
+      new Blob([JSON.stringify({ event, eventId, sourceUrl: location.href, customData })], {
+        type: 'application/json',
+      }),
+    );
+  } catch (_) {
+    /* telemetry is best-effort */
+  }
 </script>

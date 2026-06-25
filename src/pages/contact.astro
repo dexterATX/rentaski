@@ -2,9 +2,12 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHeader from '../components/PageHeader.astro';
 import Icon from '../components/Icon.astro';
+import MetaTrack from '../components/MetaTrack.astro';
 import { site } from '../data/site';
 import { faqs } from '../data/faqs';
 import type { IconName } from '../lib/icons';
+
+const viewEventId = crypto.randomUUID();
 
 const methods: {
   icon: IconName;
@@ -61,6 +64,12 @@ const faqSchema = {
     is:inline
     slot="head"
     set:html={JSON.stringify(faqSchema)}
+  />
+  <MetaTrack
+    slot="head"
+    event="ViewContent"
+    eventId={viewEventId}
+    customData={{ content_name: 'Contact', content_category: 'support' }}
   />
 
   <PageHeader

@@ -1,7 +1,10 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Icon from '../components/Icon.astro';
+import MetaTrack from '../components/MetaTrack.astro';
 import { site } from '../data/site';
+
+const viewEventId = crypto.randomUUID();
 ---
 
 <BaseLayout
@@ -9,6 +12,12 @@ import { site } from '../data/site';
   description="We couldn't find that page. Let's get you back on the water."
   noindex={true}
 >
+  <MetaTrack
+    slot="head"
+    event="ViewContent"
+    eventId={viewEventId}
+    customData={{ content_name: '404 Not Found', content_category: 'error' }}
+  />
   <section class="result">
     <div class="container container-narrow">
       <div class="result-inner">

@@ -3,12 +3,15 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import FleetRow from '../components/FleetRow.astro';
 import Icon from '../components/Icon.astro';
 import WaveDivider from '../components/WaveDivider.astro';
+import MetaTrack from '../components/MetaTrack.astro';
 import { jetskis } from '../data/jetskis';
 import { included } from '../data/booking';
 import { site, stats, testimonials } from '../data/site';
 import type { IconName } from '../lib/icons';
 
 const featured = jetskis.filter((j) => j.featured);
+
+const viewEventId = crypto.randomUUID();
 
 const features: { icon: IconName; title: string; text: string }[] = [
   {
@@ -151,6 +154,13 @@ const experiences: {
     media="(min-width: 769px)"
     type="image/webp"
     fetchpriority="high"
+  />
+
+  <MetaTrack
+    slot="head"
+    event="ViewContent"
+    eventId={viewEventId}
+    customData={{ content_name: 'Home', content_category: 'landing' }}
   />
 
   {/* ---------- HERO ---------- */}

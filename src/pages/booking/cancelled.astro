@@ -1,7 +1,10 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Icon from '../../components/Icon.astro';
+import MetaTrack from '../../components/MetaTrack.astro';
 import { site } from '../../data/site';
+
+const viewEventId = crypto.randomUUID();
 ---
 
 <BaseLayout
@@ -9,6 +12,12 @@ import { site } from '../../data/site';
   description="Your jet ski checkout was cancelled. No charge was made."
   noindex={true}
 >
+  <MetaTrack
+    slot="head"
+    event="ViewContent"
+    eventId={viewEventId}
+    customData={{ content_name: 'Checkout Cancelled', content_category: 'booking' }}
+  />
   <section class="result">
     <div class="container container-narrow">
       <div class="result-inner">

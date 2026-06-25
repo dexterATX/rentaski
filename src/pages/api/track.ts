@@ -14,7 +14,7 @@ import { metaCapiEnabled, sendMetaEvent } from '../../lib/meta';
 // also beacon here, or Meta will receive two server events per page load.
 export const prerender = false;
 
-const ALLOWED_EVENTS = new Set(['Contact', 'Lead', 'PageView', 'AddToCart', 'CustomizeProduct']);
+const ALLOWED_EVENTS = new Set(['Contact', 'Lead', 'PageView', 'AddToCart', 'CustomizeProduct', 'ViewContent']);
 
 export const POST: APIRoute = async ({ request }) => {
   // Always answer 204 — this is fire-and-forget telemetry, never user-facing.
