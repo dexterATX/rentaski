@@ -2,9 +2,14 @@
 // Meta Conversions API (server-side). Complements the browser pixel in
 // BaseLayout.astro — use matching event_id values when firing the same event
 // from both sides so Meta can deduplicate.
+//
+// Uses Meta's official capi-param-builder-nodejs SDK to build match keys
+// (fbc, fbp, client_ip_address) and to normalize/hash PII. The SDK appends an
+// appendix field to each hashed value that Meta's Parameter Builder screen
+// detects, which is how Meta confirms the SDK is in use.
 // ----------------------------------------------------------------------------
 
-import { createHash } from 'node:crypto';
+import { ParamBuilder, PII_DATA_TYPE } from 'capi-param-builder-nodejs';
 
 const PIXEL_ID = import.meta.env.PUBLIC_META_PIXEL_ID ?? '2436825083456341';
 const ACCESS_TOKEN = import.meta.env.META_CAPI_ACCESS_TOKEN;
@@ -16,9 +21,10 @@ export function metaCapiEnabled(): boolean {
   return Boolean(ACCESS_TOKEN && PIXEL_ID);
 }
 
-function sha256(value: string): string {
-  return createHash('sha256').update(value.trim().toLowerCase()).digest('hex');
-}
+// One ParamBuilder per domain — it computes eTLD+1 from the host so fbc/fbp
+// are formatted with the correct subdomain index. rentaSkii serves a single
+// domain, so a shared instance is fine.
+const paramBuilder = new ParamBuilder(['rentaskifl.com']);
 
 function parseCookies(header: string | null): Record<string, string> {
   const out: Record<string, string> = {};
@@ -103,33 +109,77 @@ export async function sendMetaEvent(input: MetaEventInput): Promise<MetaSendResu
     return { ok: false, error: 'META_CAPI_ACCESS_TOKEN not configured' };
   }
 
-  const cookies = parseCookies(input.request?.headers.get('cookie') ?? null);
+  const req = input.request;
+  const cookies = parseCookies(req?.headers.get('cookie') ?? null);
   const ud: Record<string, string> = {};
 
-  if (input.request) {
-    const ip = clientIp(input.request);
-    const ua = input.request.headers.get('user-agent');
-    if (ip) ud.client_ip_address = ip;
-    if (ua) ud.client_user_agent = ua;
+  // Use the official SDK to extract fbc/fbp/IP from the request. It reads
+  // _fbp/_fbc cookies and the fbclid query param, formats them per Meta's
+  // spec, and the appendix is what Meta's Parameter Builder detects.
+  if (req) {
+    try {
+      const url = new URL(req.url);
+      const queries: Record<string, string> = {};
+      url.searchParams.forEach((v, k) => { queries[k] = v; });
+      paramBuilder.processRequest(
+        url.host,
+        queries,
+        cookies,
+        req.headers.get('referer'),
+        req.headers.get('x-forwarded-for'),
+        null,
+      );
+      const fbc = paramBuilder.getFbc();
+      const fbp = paramBuilder.getFbp();
+      const ip = paramBuilder.getClientIpAddress() ?? clientIp(req);
+      const ua = req.headers.get('user-agent');
+      if (fbc) ud.fbc = fbc;
+      if (fbp) ud.fbp = fbp;
+      if (ip) ud.client_ip_address = ip;
+      if (ua) ud.client_user_agent = ua;
+    } catch {
+      // Fall back to manual extraction if the SDK throws on an edge-case request.
+      const ip = clientIp(req);
+      const ua = req.headers.get('user-agent');
+      if (ip) ud.client_ip_address = ip;
+      if (ua) ud.client_user_agent = ua;
+      if (cookies._fbc) ud.fbc = cookies._fbc;
+      if (cookies._fbp) ud.fbp = cookies._fbp;
+    }
   }
-  if (cookies._fbc) ud.fbc = cookies._fbc;
-  if (cookies._fbp) ud.fbp = cookies._fbp;
 
   const u = input.userData;
-  if (u?.email) ud.em = sha256(u.email);
-  if (u?.phone) ud.ph = sha256(u.phone.replace(/\D/g, ''));
-  if (u?.firstName) ud.fn = sha256(u.firstName);
-  if (u?.lastName) ud.ln = sha256(u.lastName);
+  // PII is normalized + hashed via the SDK so the appendix field is attached,
+  // which is what Meta's Parameter Builder screen looks for. The SDK handles
+  // lowercasing, trimming, phone digit extraction, etc.
+  if (u?.email) {
+    const h = paramBuilder.getNormalizedAndHashedPII(u.email, PII_DATA_TYPE.EMAIL);
+    if (h) ud.em = h;
+  }
+  if (u?.phone) {
+    const h = paramBuilder.getNormalizedAndHashedPII(u.phone, PII_DATA_TYPE.PHONE);
+    if (h) ud.ph = h;
+  }
+  if (u?.firstName) {
+    const h = paramBuilder.getNormalizedAndHashedPII(u.firstName, PII_DATA_TYPE.FIRST_NAME);
+    if (h) ud.fn = h;
+  }
+  if (u?.lastName) {
+    const h = paramBuilder.getNormalizedAndHashedPII(u.lastName, PII_DATA_TYPE.LAST_NAME);
+    if (h) ud.ln = h;
+  }
+  if (u?.externalId) {
+    const h = paramBuilder.getNormalizedAndHashedPII(u.externalId, PII_DATA_TYPE.EXTERNAL_ID);
+    if (h) ud.external_id = h;
+  }
 
   // Explicit identifiers win over request-derived ones (used by the webhook
   // Purchase, where `request` belongs to Stripe rather than the customer).
+  // These come from the Stripe session metadata, captured at checkout time.
   if (u?.fbc) ud.fbc = u.fbc;
   if (u?.fbp) ud.fbp = u.fbp;
   if (u?.clientIpAddress) ud.client_ip_address = u.clientIpAddress;
   if (u?.clientUserAgent) ud.client_user_agent = u.clientUserAgent;
-  // external_id is hashed (SHA-256) per Meta's user_data formatting spec —
-  // it's a stable first-party visitor ID, not a raw Meta identifier.
-  if (u?.externalId) ud.external_id = sha256(u.externalId);
 
   const event: Record<string, unknown> = {
     event_name: input.eventName,
